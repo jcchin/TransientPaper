@@ -35,7 +35,7 @@
 \SupplementaryNotes{}
 \Acknowledgment{This paper is based on the collaboration between RTM and RHC. Thanks to Jonathan Seidel, George Kopasakis, and Joseph Connolly for their help and patience.}
 
-\abstract{ This document outlines methodologies designed to improve the interface between the Numerical Propulsion System Simulation (NPSS) Framework and dynamic control analyses developed in the Matlab and Simulink environment. Although NPSS is most commonly used for steady-state modeling, this paper is intended to supplement the relatively sparse documentation on it's transient analysis functionality. Matlab has become an extremely popular tool for controls work, and better methodologies are necessary to develop tools that leverage the benefits of these disparate frameworks.}   % suggested 200 words
+\abstract{ This document outlines methodologies designed to improve the interface between the Numerical Propulsion System Simulation (NPSS) Framework and various control and dynamic analyses developed in the Matlab and Simulink environment. Although NPSS is most commonly used for steady-state modeling, this paper is intended to supplement the relatively sparse documentation on it's transient analysis functionality. Matlab has become an extremely popular tool for controls work, and better methodologies are necessary to develop tools that leverage the benefits of these disparate frameworks.}   % suggested 200 words
 
 
 \begin{document}
@@ -43,7 +43,7 @@
 % \tableofcontents
 
 \section{Background and Motivation}
-Two research efforts at NASA Glenn Research Center
+Historically, there have been completely separate code-bases for design space exploration and transient engine analysis. The capability to create flexible "low fidelity" models is ideal in the earliest  conceptual design stages, where large design spaces can be explored relatively quickly. As the engine design starts to become more concrete, higher fidelity models are developed. These higher detail models are intrinsically more sensitive to design tweaks, and in general take longer to setup. They inherently require more stringently defined sets of boundary conditions and a specific configuration. A large variation in the baseline design could potentially render entire higher fidelity analyses obsolete. Due to this weakness in adaptability, higher fidelity models are generally not created until the low-fidelity design has fully matured. This friction can partly be attributed to the differences in toolstes when transitioning to higher fidelity models. 
 
 \section{Introduction}
 Here goes my story.This is the introduction.
