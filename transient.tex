@@ -1,0 +1,84 @@
+%  sample input file for using the NASA.cls LaTeX class
+%  this distribution is handy for formatting TM, TP, CR, etc.
+%
+%  $Id: sample.tex,v 1.18 2009/08/10 17:22:22 wawood Exp $
+
+%  next 2 lines pull in the NASA.cls file, put options between []
+\documentclass[]             % options: RDPonly, coveronly, nocover
+{NASA}                       %   plus standard article class options
+
+
+%  Fill in the following catagories between the braces {}
+\title{Title of My Paper}
+\author{J. P. Author and T. Second} % list all the author names for
+                                    % the RDP
+
+\AuthorAffiliation{J. P. Author\\                      % list the authors
+  Langley Research Center, Hampton, Virginia\\[10pt]   % with affiliations
+  T. Second\\                                          % for cover page
+  Contract Group, Reston, Tennessee}
+\NasaCenter{Langley Research Center\\Hampton, Virginia 23681-2199}
+\Type{TM}                    % TM, TP, CR, CP, SP, TT
+\SubjectCategory{64}         % two digit number
+\LNumber{12456}              % Langley L-number
+\Number{217743}              % Report number
+\Month{11}                   % two digit number
+\Year{2002}                  % four digit number
+\SubjectTerms{CFD, grid}     % 4-5 comma separated words
+\Pages{19}                   % all the pages from the front to back covers
+\DatesCovered{}              % 10/2000--9/2002
+\ContractNumber{}            % NAS1-12345
+\GrantNumber{}               % NAG1-1234
+\ProgramElementNumber{}
+\ProjectNumber{}             % NCC1-123
+\TaskNumber{}                % Task 123
+\WorkUnitNumber{}            % 123-45-67-89
+\SupplementaryNotes{}
+\Acknowledgment{Thanks to some people.}
+
+\abstract{The {\tt NASA.cls} facilitates formatting NASA formal
+  publications. The {\tt sample.tex} file is a representative filled-out
+  \LaTeX\ input file. The file {\tt template.tex} is ready for the user
+  to write their report without all this extra verbage in this file.
+  Thus ends the abstract.}   % suggested 200 words
+
+\begin{document}
+
+% \tableofcontents
+
+\section{Introduction}
+Here goes my story.
+Yahee.
+
+\section{Rest of the Paper}
+Write the rest of your paper using the normal \LaTeX\ stuff you like to
+use.
+
+\section{Conclusions}
+This is quite handy.
+
+\begin{thebibliography}{WoodTP}
+\bibitem[WoodTP]{woodTP} Wood, W.A., ``Multidimensional Upwind
+  Fluctuation Splitting Scheme with Mesh Adaption for Hypersonic Viscous
+  Flow,'' NASA/TP 2002-211640, Apr.~2002.
+\end{thebibliography}
+{\em Note that this entry is not necessarily in the correct NASA
+  format. Consult Technical Editing for correct reference format.}
+
+\newpage
+\appendix
+
+\Appendix{An appendix}
+Some appendix material.
+
+\subsection{Appendix sub}
+Are subsections numbered within the appendix?
+
+\Appendix{Next}
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
