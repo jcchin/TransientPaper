@@ -1,43 +1,4 @@
-%  sample input file for using the NASA.cls LaTeX class
-%  this distribution is handy for formatting TM, TP, CR, etc.
-%
-%  $Id: sample.tex,v 1.18 2009/08/10 17:22:22 wawood Exp $
-
-%  next 2 lines pull in the NASA.cls file, put options between []
-\documentclass[]             % options: RDPonly, coveronly, nocover
-{NASA}                       %   plus standard article class options
-
-
-%  Fill in the following catagories between the braces {}
-\title{Interfacing the Numerical Propulsion System Simulation with Transient Analyses in Matlab}
-\author{J. C. Chin and J. T. Csank} % list all the author names for the RDP
-
-\AuthorAffiliation{Jeffrey C. Chin\\                      % list the authors
-  Glenn Research Center, Cleveland, OH\\[10pt]   % with affiliations
-  Jeffrey T. Csank\\                                          % for cover page
-  Glenn Research Center, Cleveland, OH}
-\NasaCenter{Glenn Research Center\\Cleveland, OH 44135}
-\Type{TM}                    % TM, TP, CR, CP, SP, TT
-\SubjectCategory{64}         % two digit number
-\LNumber{12456}              % Langley L-number
-\Number{217743}              % Report number
-\Month{02}                   % two digit number
-\Year{2014}                  % four digit number
-\SubjectTerms{CFD, grid}     % 4-5 comma separated words
-\Pages{10}                   % all the pages from the front to back covers
-\DatesCovered{10/2013--2/2014}              % 10/2000--2/2014
-\ContractNumber{}            % NAS1-12345
-\GrantNumber{}               % NAG1-1234
-\ProgramElementNumber{}
-\ProjectNumber{}             % NCC1-123
-\TaskNumber{}                % Task 123
-\WorkUnitNumber{}            % 123-45-67-89
-\SupplementaryNotes{}
-\Acknowledgment{This paper is based on the collaboration between RTM and RHC. Thanks to Jonathan Seidel, George Kopasakis, and Joseph Connolly for their help and patience.}
-
-\abstract{ This document outlines methodologies designed to improve the interface between the Numerical Propulsion System Simulation (NPSS) Framework and various control and dynamic analyses developed in the Matlab and Simulink environment. Although NPSS is most commonly used for steady-state modeling, this paper is intended to supplement the relatively sparse documentation on it's transient analysis functionality. Matlab has become an extremely popular tool for controls work, and better methodologies are necessary to develop tools that leverage the benefits of these disparate frameworks.}   % suggested 200 words
-
-
+\documentclass[heading.tex]{subfiles} 
 \begin{document}
 
 % \tableofcontents
@@ -56,24 +17,6 @@ use.
 \section{Conclusions}
 This is conclusions section it's quite handy.
 
-\begin{thebibliography}{WoodTP}
-\bibitem[WoodTP]{woodTP} Wood, W.A., ``Multidimensional Upwind
-  Fluctuation Splitting Scheme with Mesh Adaption for Hypersonic Viscous
-  Flow,'' NASA/TP 2002-211640, Apr.~2002.
-\end{thebibliography}
-{\em Note that this entry is not necessarily in the correct NASA
-  format. Consult Technical Editing for correct reference format.}
-
-\newpage
-\appendix
-
-\Appendix{An appendix}
-Some appendix material.
-
-\subsection{Appendix sub}
-Are subsections numbered within the appendix?
-
-\Appendix{Next}
 
 \end{document}
 

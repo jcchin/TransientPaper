@@ -2,3 +2,11 @@
 /*.pdf
 /*.log
 /*.aux
+/*.lof
+/*.lot
+/*.toc
+/*.pyg
+/*.out
+/*.blg
+/*.DS_Store
+/*.bbl
