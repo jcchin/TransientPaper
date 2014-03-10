@@ -51,12 +51,14 @@
 \usepackage[hypcap]{caption} %figure references point to top of figure
 \usepackage{wrapfig}
 \usepackage{subcaption}
+\usepackage{float} %override image placement
 
 %these seemed to be necessary with minted... not sure what they do..
 \makeatletter
 \color{black}
 \let\default@color\current@color
 \makeatother
+\restylefloat{figure} %override image placement
 
 %reference appendix
 \crefname{appsec}{Appendix}{Appendices}
@@ -73,6 +75,7 @@
 \cite{NonlinearDynamic}
 \cite{MatlabOOP}
 \cite{Volume Dynamic}
+\cite{TTECTrA}
 
 \bibliographystyle{unsrt} %sorted by appearence, consider using natbib?
 \bibliography{bibliography}
