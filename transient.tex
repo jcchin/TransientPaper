@@ -23,11 +23,66 @@ The subsequent sections explore three approaches to interfacing NPSS with Matlab
 
 \section{File Transfer}
 \subsection{Batch Run}
+This method involves:
+
+\begin{enumerate}
+  \item Specifying run cases in Matlab, programatically creating the batch and input files
+  \item Transfer cases to NPSS
+  \item Run Cases, output in matlab-syntax
+  \item Transfer output back to Matlab
+\end{enumerate}
+
 \subsection{Transient}
+
+Same process as above, except for every time step. Engine state saved to file.
 
 \section{Compiled S-function}
 \subsection{Background}
+For Fixed Wing project, TTECTrA
+
+Compatibility: R2008 - R2010b 32-bit only.
+
 \subsection{NPSS Implementation}
+
+The following solver variables are common in a steady-state and transient run of a turbofan engine.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|}
+\hline 
+Independent & Dependent \\ 
+\hline \hline
+\texttt{Ambient.ind\_W} & \texttt{Byp\_Nozz.dep\_Area} \\ 
+\hline 
+\texttt{Fan.S\_map.ind\_RlineMap} & \texttt{Core\_Nozz.dep\_Area} \\ 
+\hline 
+\texttt{HPC.S\_map.ind\_RlineMap} & \texttt{Fan.S\_map.dep\_errWc} \\ 
+\hline 
+\texttt{HPT.S\_map.ind\_parmMap} & \texttt{HPT.S\_map.dep\_errWp} \\ 
+\hline 
+\texttt{HP\_Shaft.ind\_Nmech} & \texttt{HP\_Shaft.integrate\_Nmech} \\ 
+\hline 
+\texttt{LPC.S\_map.ind\_RlineMap} & \texttt{LPC.S\_map.dep\_errWc} \\ 
+\hline 
+\texttt{LPT.S\_map.ind\_parmMap} & \texttt{LPT.S\_map.dep\_errWp} \\ 
+\hline 
+\texttt{LP\_Shaft.ind\_Nmech} & \texttt{LP\_Shaft.integrate\_Nmech} \\ 
+\hline 
+• & • \\ 
+\hline 
+• & • \\ 
+\hline 
+• & • \\ 
+\hline 
+\end{tabular} 
+\caption{Solver Variables for a basic turbofan configuration}
+\label{tab:SolverVariables}
+\end{table}
+
+Running with Dvariable flags.
+
+Output: Solver.postexecute (transient user guide)
+
 \subsection{Matlab Implementation}
 
 \section{Source-to-Source Translation}
