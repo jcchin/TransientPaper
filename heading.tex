@@ -35,7 +35,7 @@
 \TaskNumber{}                % Task 123
 \WorkUnitNumber{}            % 123-45-67-89
 \SupplementaryNotes{}
-\Acknowledgment{This paper is based on the collaboration between RTM and RHC. Thanks to Jonathan Seidel, George Kopasakis, and Joseph Connolly for their help and patience.}
+\Acknowledgment{This paper is based on the collaboration between RTM and RHC. Thanks to George Kopasakis, and Joseph Connolly for their help and patience.}
 
 \abstract{ This document outlines methodologies designed to improve the interface between the Numerical Propulsion System Simulation (NPSS) Framework and various control and dynamic analyses developed in the Matlab and Simulink environment. Although NPSS is most commonly used for steady-state modeling, this paper is intended to supplement the relatively sparse documentation on it's transient analysis functionality. Matlab has become an extremely popular tool for controls work, and better methodologies are necessary to develop tools that leverage the benefits of these disparate frameworks.}   % suggested 200 words
 
@@ -49,6 +49,8 @@
 \usepackage{courier} %courier font for variable names
 \usepackage{cleveref} %section references
 \usepackage[hypcap]{caption} %figure references point to top of figure
+\usepackage{wrapfig}
+\usepackage{subcaption}
 
 %these seemed to be necessary with minted... not sure what they do..
 \makeatletter
@@ -66,10 +68,12 @@
 
 \subfile{transient}
 
-\cite{Cengal}
-\cite{Turns}
-\cite{Berton}
-\cite{Rouleau}
+
+\cite{Turbofan}
+\cite{NonlinearDynamic}
+\cite{MatlabOOP}
+\cite{Volume Dynamic}
+
 \bibliographystyle{unsrt} %sorted by appearence, consider using natbib?
 \bibliography{bibliography}
 
