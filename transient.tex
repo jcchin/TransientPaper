@@ -19,10 +19,10 @@ Historically, there have been completely separate code-bases for design space ex
 
 Figure \ref{f:product_vs_time} shows a pedagogical representation of the general relation between accuracy and analysis set-up time. Lower fidelity (Lo-Fi) models are less accurate, but can be set up and modified relatively quickly. The darker gray path characterizes the tradtional design trend. Higher fidelity (Hi-Fi) models take longer to build, and therefore, aren't started until the low fidelity model nears completion. If designers attempt to introduce Hi-Fi models earlier in the design, as shown by the light gray line shifted to the left, they quickly become outdated as the baseline model continues to undergo changes. Inevitably the models must be re-written to match the new Lo-Fi design and the path reverts to the dark gray route. The only way to incorporate the intermediate fidelity model earlier into the design process, is by absorbing the Int-Fi codes into the low fidelity codes as portrayed by the red line. Combining both codes into a unified code would accomplish this, but the codes can also be kept distinct as long as the Int-Fi model is adaptable enough to keep up with the rapid changes of the Low-Fi code. Creating a single unified code can also potentially become overly complex and cumbersome. A natural reaction is for various disciplines to diverge and create unique tools satisfying their particular needs using frameworks and programming languages that are already of familiarity. As mentioned earlier, this is acceptable as long as the codes preserve flexibility and rapid adaptability. An intermediate fidelity code can only be introduced earlier into the low fidelity analysis phase if it can keep pace with the rapid redesigns.
 
-The subsequent sections explore three approaches to interfacing NPSS with Matlab codes. The first being the simplest and most straightforward but performance constrained. The last being the most abstract. These methods aren't mutually exclusive, and the specific implementation details could vary greatly based on the designer's discretion. 
+The subsequent sections explore various design patterns to rapidly develop transient models. Each approach starts with a base model built with NPSS, and assumes the reader already has a basic understanding of how to construct a steady-state model. This paper focuses on further enhancements required to interface NPSS with Matlab codes. The first method being the simplest and most straightforward but performance constrained. The last being the most abstract. These methods aren't mutually exclusive and the specific implementation details could vary greatly based on the designer's discretion. 
 
 
-\section{Running Transiently in NPSS}
+\section{Running NPSS Transiently}
 
 
 \begin{adjustwidth}{-1cm}{-1cm}
@@ -30,7 +30,7 @@ The subsequent sections explore three approaches to interfacing NPSS with Matlab
  \end{adjustwidth} 
 
 
-Transient simulations represent the time-varying behavior of a system by finding a series of solutions at discrete time steps over a desired time interval. NPSS solve these systems of equations largely in the same way it handles steady-state solutions. However for transient systems, some of the equations require integration rather than simply driving imbalances to zero. 
+Transient simulations represent the time-varying behavior of a system by finding a series of solutions at discrete time steps over a desired time interval. NPSS solves these systems of equations largely in the same way it handles steady-state solutions. However for transient systems, some of the equations require integration rather than simply driving imbalances to zero. 
 
 \subsection{Solver and Integration Methods}
 NPSS supports multiple integration types, that are outlined in the NPSS users guide. \cite[chap.~7.1]{NPSS} Table \ref{tab:Integration} summarizes the available methods, with a first-order differential equation for spool speed used as an example: 
