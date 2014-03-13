@@ -1,0 +1,6 @@
+solver.removeIndependent( "FuelControl" ); //remove SS solver variables
+solver.removeDependent( "ControlErr" );
+solver.postExecutionSequence = { "transientTrace" }; //viewer function
+  //^executes after solver convergence at each time step
+run();
+transientTrace.display(); //write viewer variables to it's output file

@@ -19,7 +19,94 @@ Historically, there have been completely separate code-bases for design space ex
 
 Figure \ref{f:product_vs_time} shows a pedagogical representation of the general relation between accuracy and analysis set-up time. Lower fidelity (Lo-Fi) models are less accurate, but can be set up and modified relatively quickly. The darker gray path characterizes the tradtional design trend. Higher fidelity (Hi-Fi) models take longer to build, and therefore, aren't started until the low fidelity model nears completion. If designers attempt to introduce Hi-Fi models earlier in the design, as shown by the light gray line shifted to the left, they quickly become outdated as the baseline model continues to undergo changes. Inevitably the models must be re-written to match the new Lo-Fi design and the path reverts to the dark gray route. The only way to incorporate the intermediate fidelity model earlier into the design process, is by absorbing the Int-Fi codes into the low fidelity codes as portrayed by the red line. Combining both codes into a unified code would accomplish this, but the codes can also be kept distinct as long as the Int-Fi model is adaptable enough to keep up with the rapid changes of the Low-Fi code. Creating a single unified code can also potentially become overly complex and cumbersome. A natural reaction is for various disciplines to diverge and create unique tools satisfying their particular needs using frameworks and programming languages that are already of familiarity. As mentioned earlier, this is acceptable as long as the codes preserve flexibility and rapid adaptability. An intermediate fidelity code can only be introduced earlier into the low fidelity analysis phase if it can keep pace with the rapid redesigns.
 
-The subsequent sections explore three approaches to interfacing NPSS with Matlab codes. The first being the simplest and most straightforward but performance constrained. The last being the most abstract. These methods aren't mutually exclusive, and the specific implementation details could vary greatly based on the designer's discretion.
+The subsequent sections explore three approaches to interfacing NPSS with Matlab codes. The first being the simplest and most straightforward but performance constrained. The last being the most abstract. These methods aren't mutually exclusive, and the specific implementation details could vary greatly based on the designer's discretion. 
+
+
+\section{Running Transiently in NPSS}
+
+
+\begin{adjustwidth}{-1cm}{-1cm}
+ \inputminted[]{c++}{code/transient1}
+ \end{adjustwidth} 
+
+
+Transient simulations represent the time-varying behavior of a system by finding a series of solutions at discrete time steps over a desired time interval. NPSS solve these systems of equations largely in the same way it handles steady-state solutions. However for transient systems, some of the equations require integration rather than simply driving imbalances to zero. 
+
+\subsection{Solver and Integration Methods}
+NPSS supports multiple integration types, that are outlined in the NPSS users guide. \cite[chap.~7.1]{NPSS} Table \ref{tab:Integration} summarizes the available methods, with a first-order differential equation for spool speed used as an example: 
+
+\begin{minipage}{\linewidth}
+\centering
+\bigskip
+\captionof{table}{NPSS Integration Methods} \label{tab:Integration}
+\begin{tabular}{|c|c|c|}
+\hline 
+Method & Type & Solving for  $N_{t2}$, given  $N_{t2}- N_{t1}= \int_{t1}^{t2} \! \dfrac{T_{net}}{I} \, \mathrm{d}t $\\ 
+\hline 
+Euler & Explicit & $ \left.N_{t2}= N_{t1} + \dfrac{T_{net}}{I} \right|_{t1}^{}(t2-t1)$ \\ 
+\hline 
+Trapezoidal & Implicit & $ \left.N_{t2}= N_{t1} + \dfrac{1}{2}\middle(\dfrac{T_{net}}{I} \middle|_{t1}^{}+\dfrac{T_{net}}{I} \middle|_{t2}^{}\right)(t2-t1)$ \\ 
+\hline 
+$1^{st}$ Order Gear & Implicit & $ \left.N_{t2}= N_{t1} + \dfrac{ \mathrm{d}N }{ \mathrm{d}t } \right|_{t2}^{}(t2-t1)$ \\ 
+\hline 
+$2^{nd}$ Order Gear & Implicit & $ \left.N_{t2}= N_{t1} + \middle(\dfrac{1}{3}\dfrac{ \mathrm{d}N }{ \mathrm{d}t }\middle|_{t1}^{}+\dfrac{2}{3}\dfrac{ \mathrm{d}N }{ \mathrm{d}t }\middle|_{t2}^{}\right)(t2-t1)$ \\ 
+\hline 
+\end{tabular} 
+\end{minipage}
+
+Steady-state iteration may be required for any of these methods, and the choice between explicit and implicit types comes down to accuracy vs time. Explicit methods assume the integrand is constant over the specified time interval, therefore integration is only performed once per time step. Implicit methods perform a sub-iteration (independent from time) until the predicted state value agrees with the corrected value within a specified tolerance. NPSS also allows the user to define custom integration methods using the \texttt{Integrator} class. \cite[chap.~15.2]{NPSS}  
+
+\begin{adjustwidth}{-0.5cm}{-0.5cm}
+ \begin{minted}{c++}
+ setOption( "solutionMode", "TRANSIENT" );
+ Transient.integrationType = "TRAPEZOIDAL"; //Default Gear 1st order
+ transient.setup(); //run if changing to (or from) Euler method
+ initializeHistory(); //run if initial conditions 
+ 	//differ from most recent transient run
+ \end{minted}
+ \end{adjustwidth} 
+       
+
+The top level transient solver is of type \texttt{TransientExecutive}, and is named \texttt{transient} by default. This variable is analogous to the top-level steady-state ``\texttt{solver}" object. The \texttt{transient} object is responsible for setting integration solver properties including the simulation start, step and stop parameters. \cite[chap.~7.5]{NPSS} \cite[chap.~15.1.8]{NPSS}  All attributes have a default value except \texttt{transient.stopTime}, which must be supplied by the user. Over the course of a run, the \texttt{TransientExecutive} may update these attributes or even overwrite values set by the user. The user can also preemptively stop a simulation using the  \texttt{quiescence()} and  \texttt{terminateCondition()} functions available in the \texttt{TransientExecutive}.
+
+\begin{adjustwidth}{0cm}{0cm}
+ \begin{minted}{c++}
+transient { //set as a group
+	timeStepMethod = "ADAPTIVE";
+	baseTimeStep= 0.10;
+	dxTransLimit = 0.05;
+	maxTimeStep = 0.20;
+	minTimeStep = 0.01;
+	stopTime= 3.60;
+} //or set individually: transient.stopTime = 3.6;
+ \end{minted}
+ \end{adjustwidth} 
+
+Before running transiently, the user must first ensure that each engine component with transient specific attributes is properly initialized. Common components with special transient properties include, shafts, springs, control volumes, heat exchangers, walls and thermal masses.
+After steady-state engine sizing occurs, it is often necessary to determine multiple power settings by running off-design cases, or trim the engine before initiating a transient. Once the model is trimmed, the transient model is setup by adding/removing solver variables, setting transient solver options, adding transient output viewers, and specifying time step and termination criteria as described above.
+
+\subsection{Transient Input}
+
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{images/fuelRamp}
+\caption{Example fuel ramp used to drive a transient run}
+\label{f:ramp}
+\end{figure}
+
+\begin{adjustwidth}{-1cm}{-1cm}
+ \inputminted[]{c++}{code/rampFn}
+ \end{adjustwidth} 
+ 
+Or the same function could be built using a table. 
+ 
+ \begin{adjustwidth}{-1cm}{-1cm}
+ \inputminted[]{c++}{code/rampTb}
+ \end{adjustwidth} 
+
+Example code demonstrating all of these steps together can be found in appendix \cref{app:transient}.
 
 \section{File Transfer}
 \subsection{Batch Run}

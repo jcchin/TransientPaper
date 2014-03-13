@@ -1,0 +1,13 @@
+
+real Ramp( real time, real tstart, real duration, real Y1, real Y2 ) {
+  real fuel, slope;
+  if (duration < 0) { duration = 0;}
+  if (duration) {slope = (Y2 - Y1) / duration;}
+  if (time <= tstart) { fuel = Y1; }
+  else if (time > tstart  &&  time < tstart+duration) {
+    fuel = Y1 + (slope * (time-tstart));
+  }
+  else { fuel = Y2; }
+  return fuel; 
+}
+RunCondition.eq_rhs = "Ramp( time, 0.2, 3.0, Wf1, Wf2 )";

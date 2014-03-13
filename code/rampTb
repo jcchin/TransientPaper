@@ -1,0 +1,11 @@
+real Ramp(real time, real tstart, real duration, real Y1, real Y2) {
+	real fuel;
+	Table TB_time(real time) {
+		time.interp = "linear";
+		time.extrap = "none"; //edge val used if extrap
+		time= { 0.00, tstart, tstart+duration} 
+		fuel = { Y1, Y1, Y2}
+    }
+	return TB_time(time);
+}
+RunCondition.eq_rhs = "Ramp( time, 0.2, 3.0, Wf1, Wf2 )";
