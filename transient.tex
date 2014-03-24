@@ -63,16 +63,10 @@ designer's discretion.
 
 \section{Running NPSS Transiently}
 
-
-\begin{adjustwidth}{-1cm}{-1cm}
- \inputminted[]{c++}{code/transient1}
- \end{adjustwidth} 
-
-
 Transient simulations represent the time-varying behavior of a system by finding a series of
 solutions at discrete time steps over a desired time interval. NPSS solves these systems of
 equations largely in the same way it handles steady-state solutions. However for transient
-systems, some of the equations require integration rather than simply driving imbalances to zero. 
+systems, some of the equations require engine state integration rather than simply driving imbalances to zero. 
 
 \subsection{Solver and Integration Methods}
 NPSS supports multiple integration types, that are outlined in the NPSS users guide.
@@ -171,6 +165,14 @@ Or the same function could be built using a table.
 
 Example code demonstrating all of these steps together can be found in appendix \cref{app:transient}.
 
+\subsection{Transient Output}
+
+In order to capture the engine state after convergence at every time step, standard viewers or custom functions can be invoked using the ``\texttt{solver.postExecutionSequence}" method. This method takes an array of strings that correspond to viewer objects or function names. If a PageViewer or DataViewer is called, it will automatically invoke the \texttt{display()} method of these objects, if a CaseViewer is called, only the \texttt{update()} method will be invoked.
+
+\begin{adjustwidth}{-1cm}{-1cm}
+ \inputminted[]{c++}{code/transient1}
+ \end{adjustwidth} 
+
 \section{File Transfer}
 \subsection{Batch Run}
 This method involves:
@@ -186,9 +188,18 @@ This method involves:
 
 Same process as above, except for every time step. Engine state saved to file.
 
+Adhering to the following design patterns simplifies the process:
+Isolate engines into the following subgroups, Maps, Input, Output, Run, Src, View.
+
+-Separate inputs from run files (reduce size of files transfered, simplifies output from Matlab)
+-Common run files between engines -Running with Dvariable flags.
+-Common view files between engines
+
+
+
 \section{Compiled S-function}
 \subsection{Background}
-For Fixed Wing project, TTECTrA
+For Fixed Wing project, TTECTrA (add background)
 
 Compatibility: R2008 - R2010b 32-bit only.
 
@@ -230,14 +241,18 @@ Independent & Dependent \\
 \label{tab:SolverVariables}
 \end{table}
 
-Running with Dvariable flags.
-
-Output: Solver.postexecute (transient user guide)
 
 \subsection{Matlab Implementation}
 
 \section{Source-to-Source Translation}
 \subsection{Background}
+
+The most abstract method of generating a transient model from NPSS is best described as "Source-to-Source Translation" (SST), which is the process of converting one high level language to another. This method is appropriate when developing an transient engine model that may be completely separate, but originally derived from NPSS.
+
+
+(Possibly include TMATS?)
+
+
 Under the NASA Fundamental Aeronautics Program, the Supersonics Project is developing a variable
 cycle engine (VCE) model for use in aero-propulso-servo-elastic (APSE) coupling studies of
 supersonic vehicles. (Connolly, Kopasakis, \& Lemon, 2010) Analytical, computational, wind tunnel
