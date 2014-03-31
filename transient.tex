@@ -187,7 +187,10 @@ Example code demonstrating all of these methods can be found in appendix \cref{a
 
 \subsection{Transient Output}
 
-In order to capture the engine state after convergence at every time step, standard viewers or custom functions can be invoked using the ``\texttt{solver.postExecutionSequence}" method. This method takes an array of strings that correspond to viewer objects or function names. If a PageViewer or DataViewer is called, it will automatically invoke the \texttt{display()} method of these objects, if a CaseViewer is called, only the \texttt{update()} method will be invoked.
+In order to capture the engine state after convergence at every time step, standard viewers or custom functions can be
+invoked using the ``\texttt{solver.postExecutionSequence}" method. This method takes an array of strings that
+correspond to viewer objects or function names. If a PageViewer or DataViewer is called, it will automatically invoke the
+\texttt{display()} method of these objects, if a CaseViewer is called, only the \texttt{update()} method will be invoked.
 
 \begin{adjustwidth}{-1cm}{-1cm}
  \inputminted[]{c++}{code/transient1}
@@ -267,46 +270,25 @@ Independent & Dependent \\
 \section{Source-to-Source Translation}
 \subsection{Background}
 
-The most abstract method of generating a transient model from NPSS is best described as "Source-to-Source Translation" (SST), which is the process of converting one high level language to another. This method is appropriate when developing an transient engine model that may be completely separate, but originally derived from NPSS.
+The most abstract method of generating a transient model from NPSS is best described as "Source-to-Source Translation"
+(SST), which is the process of converting one high level language to another. This pattern is appropriate when developing
+a transient engine model that may be completely separate, but originally derived, from NPSS.
 
 
 (Possibly include TMATS?)
 
-
-Under the NASA Fundamental Aeronautics Program, the Supersonics Project is developing a variable
-cycle engine (VCE) model for use in aero-propulso-servo-elastic (APSE) coupling studies of
-supersonic vehicles. (Connolly, Kopasakis, \& Lemon, 2010) Analytical, computational, wind tunnel
-and flight data of Aero-Servo-Elastic (ASE) systems have been thoroughly vetted however much work
-still needs to be done to integrate propulsion dynamics into the ASE analysis tool suite.
-(Fundamental Aeronautics Program Supersonics Project, 2006)
-The Controls \& Dynamics branch and the Multidisciplinary Design, Analysis \& Optimization (MDAO)
-branch at NASA Glenn are working in conjunction to produce a propulsion model that will eventually
-be of a sufficient fidelity to directly couple with full-scale computational fluid dynamic (CFD)
-and structural dynamic models. The task has been partitioned into three connected simulations: a
-two-dimensional bifurcated inlet, a variable cycle turbofan engine, and variable area exit nozzle.
-(Connolly, Kopasakis, Paxson, Stuber, \& Woolwine, 2012) 
-Development of the engine simulation has proven difficult, largely due to the number of components
-involved. Many of the challenges have been associated with data management issues or difficulties
-in adaptability as the simulation has been scaled up in fidelity and engine complexity. The main
-intent of this report is to discuss the strategies used to construct and initialize these large
-models.  The methodology for computing component performance has been adopted from previous work
-completed by the Controls \& Dynamics group, (Kopasakis, Connolly, Paxson, \& Ma, 2008) and is
-beyond the scope of this paper.
-This report focuses on a novel software generation tool being designed to dramatically reduce
-engine model set-up time, allowing higher fidelity analyses to be introduced earlier in the design
-cycle. The software is intended to work for any type of engine architecture, but was originally
-tailored for the VCE configuration. The benefits of the tool are most apparent when its impacts
-are framed from a design cycle standpoint.
-
-	In the context of NASA Glenn’s supersonic program, the Numerical Propulsion System Simulation
-(NPSS) VCE engine is the low fidelity model, and the Supersonic Component Engine Model (SCEM) is
-the intermediate fidelity model. The NPSS model is a framework written in C++, while the SCEM
-model is developed within the Matlab/Simulink environment. The SCEM model performs its own unique
-calculations, but requires the steady-state engine characteristics of the NPSS model to initialize
-the simulation. Large advances needed to be made to the intialization scripts of the SCEM program
-if both programs are to be run congruently. A brief history of the SCEM model is provided below to
-shed light on the amount of work that is required to build such a model and to emphasize the clear
-need for improved extensibility.  
+	Under the NASA Fundamental Aeronautics Program, the High Speed Project is developing a dynamic engine model
+to better understand the coupling between propulsion and  aero-servo-elastic modes of long slender
+supersonic vehicles. (Connolly, Kopasakis, \& Lemon, 2010) The supersonic component engine model (SCEM) is 
+designed to extend a steady-state NPSS model and better capture high bandwidth dynamics associated with large
+component volumes. The simulations aims to improve stability margin estimations and design engine control schedules
+for compressor and exit nozzles of a variable cycle engine. Development of such a simulation can be challenging,
+largely due to the number of engine components involved. Many of the challenges have been associated with data
+management issues or difficulties in adaptability as the simulation has been scaled up in fidelity and engine complexity. 
+Much like the intermediate fidelity model described in figure \ref{f:product_vs_time}, the SCEM model performs its
+own unique calculations, but requires the steady-state engine characteristics of an existing NPSS model to initialize
+the simulation. Source-to-source translation is one way to automate the conversion of an NPSS engine to help
+reduce development time and alleviate model complexity.
 
 \subsubsection{Problem Decomposition}
 
