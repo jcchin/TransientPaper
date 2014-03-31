@@ -144,7 +144,10 @@ termination criteria as described above.
 
 \subsection{Transient Input}
 
-
+Time dependent input variables must be defined and evaluated at every time step during a simulation, and therefore cannot simply be
+assigned to a constant value before executing the \texttt{run()} command. Variable values can be calculated explicitly for every times
+step or calculated implicitly using built-in table and interpolation routines. The code snippets below show both of these methods,
+respectively, for defining fuel flow as shown in figure \ref{f:ramp}.
 
 \begin{figure}[H]
 \centering
@@ -163,7 +166,24 @@ Or the same function could be built using a table.
  \inputminted[]{c++}{code/rampTb}
  \end{adjustwidth} 
 
-Example code demonstrating all of these steps together can be found in appendix \cref{app:transient}.
+The last line of each of these variable definition functions tells NPSS how to evaluate the calculated fuel flow input. These dynamic input
+variables can evaluated in one of three ways. The first way involves creating a set of independent/dependent equations as show above.
+The variable definition function is set as a the right hand side (\texttt{rhs}) of a dependent equation, with the left hand side set to fuel
+flow. A second variable must be defined as the independent variable and is varied by the solver until the dependent equation is satisfied.
+
+[Independent/Dependent Code Snippet]
+
+ The second method involves setting the variable of interest as a constraint. This method is appropriate if keeping the variable within a
+ specified bound is more important than driving the variable to an exact value. This behavior can be beneficial for several operations, for
+ example if the user wanted to develop a schedule of limiters on specific engine state. These constraints can be defined as shown below.
+ 
+ [Constraint Code Snippet]
+ 
+ A third method for setting user defined variables is done using the NPSS supplied \texttt{solversequence()} method. This allows users to simply append a function to the end of every time-step calculation loop and evaluate any variable to a specified value.
+ 
+ [solver sequence code snippet]
+ 
+Example code demonstrating all of these methods can be found in appendix \cref{app:transient}.
 
 \subsection{Transient Output}
 
