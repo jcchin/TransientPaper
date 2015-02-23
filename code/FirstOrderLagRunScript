@@ -1,0 +1,344 @@
+#include "FirstOrderLag.mdl"
+// create a function that will reset the model to initial conditions.
+void resetModel (){
+// reset the input and run once to reset the derivative (output)
+	myTransOut << "\n\nRun a ONE_PASS to reset derivative in model\n";
+	myLag.x = 0.0000;
+	time = 0.0000;
+	setOption("solutionMode", "ONE_PASS");
+	run();
+	transOut.reset();
+	setOption("solutionMode", "TRANSIENT");
+	initializeHistory();
+	// force it start with a new matrix
+	solver.forceNewJacobian = TRUE;
+}
+// create an element for setting the input step function.
+class Input extends Element{
+	real stepTime, stepVal, outputVal;
+	void calculate() {
+	if (time <= stepTime){
+		outputVal = 0.0000;
+	}
+	else{
+		outputVal = stepVal;
+	}
+};
+
+// create an instance of the input element
+Element Input yInput {
+	stepVal = 5.0;
+	stepTime = 0.00;
+	void postexecute() {
+		myLag.y = outputVal;
+	}
+}
+// put the input element in the preExecutionSequence.
+solver.executionSequence.remove("yInput");
+solver.preExecutionSequence.append("yInput");
+// set initial conditions
+myLag.x = 0.0000;
+myLag.tau = 0.5;
+benchMark.x = 0.0000;
+benchMark.tau = 0.5;
+benchMark.y = yInput.stepVal;
+// set the independent reference value (since x starts from zero).
+xIndep.indepRef = "1.00";
+// set up the baseline transient run options
+setOption("solutionMode", "TRANSIENT");
+transient.stopTime = 2.5000;
+transient.baseTimeStep = 0.025;
+// set the debug options so we can track the number of passes,
+// etc. in the transient run.
+solver.debugLevel = "NONE";
+// optional settings to improve convergence
+//solver.toleranceBroydenScalar = 1.e-10;
+// Test 1.1 Baseline run to quiescence
+myTransOut << "======================================================="
+<< "\n TRANSIENT TESTS WITH IMPLICIT FIRST-ORDER LAG MODEL "
+<< "\n======================================================="
+<< "\n\nTest 1.1 Baseline Case - run to quiescence "
+<< "\n(dt = 0.025)"
+<< "\n--------------------------------------------\n";
+//cout << "Test 1.1\n";
+transient.terminateCondition = "quiescence()";
+run();
+//update transient output report;
+myTransOut << "\n"; transOut.display();
+// Test 1.2 Run Steady-state point w/o resetting
+myTransOut << "\n\nTest 1.2 Run Steady-state point w/o resetting"
+<< "\n-----------------------------------------------\n";
+//cout << "Test 1.2\n";
+setOption("solutionMode","STEADY_STATE");
+run();
+dumper.display();
+transOut.reset();
+// Test 1.3 Reset initial conditions and run to an x=.632 * 5.0
+myTransOut << "\n\nTest 1.3 Reset initial conditions and run to an x=.632 * 5.0"
+<< "\n--------------------------------------------------------------\n";
+//cout << "Test 1.3\n";
+resetModel();
+transient.terminateCondition = "myLag.x > (0.632 * yInput.stepVal)";
+myTransOut << "\n\n Now run transient ...\n";
+run();
+myTransOut << "\n"; transOut.display();
+transient.terminateCondition = "quiescence()";
+// Test 1.4 Run Steady-state point w/o resetting
+myTransOut << "\n\nTest 1.4 Run Steady-state point w/o resetting"
+<< "\n-----------------------------------------------\n";
+//cout << "Test 1.4\n";
+setOption("solutionMode","STEADY_STATE");
+run();
+dumper.display();
+transOut.reset();
+// Test 3.1.3 - Run with different time-step
+myTransOut << "\n\nTest 3.1.3 - Run baseline with dt = 0.05\n"
+<< "-------------------------------------------------\n";
+//cout << "Test 3.1.3\n";
+resetModel();
+transient.baseTimeStep = 0.05;
+run();
+myTransOut << "\n"; transOut.display();
+// Test 3.3 - run with adaptive time-stepping on
+myTransOut << "\nTest 3.3 run 1.1 with timeStepMethod = ADAPTIVE\n"
+<< "-------------------------------------------------\n";
+//cout << "Test 3.3\n";
+resetModel();
+transient.baseTimeStep = 0.025;
+transient.timeStepMethod = "ADAPTIVE";
+run();
+myTransOut << "\n"; transOut.display();
+// Test 3.4.1 - change min and max time steps
+myTransOut << "\nTest 3.4.1 - set minTimeStep = 0.02; and maxTimeStep = 0.05\n"
+<< "------------------------------------------------------------\n";
+//cout << "Test 3.4.1\n";
+resetModel();
+transient.baseTimeStep = 0.025;
+real oldMin = transient.minTimeStep;
+real oldMax = transient.maxTimeStep;
+transient.minTimeStep = .02;
+transient.maxTimeStep = 0.05;
+run();
+myTransOut << "\n"; transOut.display();
+transient.minTimeStep = oldMin;
+transient.maxTimeStep = oldMax;
+// Test 3.4.2 - change dxTransLimit and dxTransLimitType
+myTransOut << "\nTest 3.4.2 - set dxTransLimit = 0.25 and \n"
+<< "dxTransLimitType = ABSOLUTE\n"
+<< "------------------------------------------------------------\n";
+//cout << "Test 3.4.2\n";
+resetModel();
+transient.baseTimeStep = 0.025;
+real oldLimit = transient.dxTransLimit;
+string oldType = transient.dxTransLimitType;
+transient.dxTransLimit = 0.25;
+transient.dxTransLimitType = "ABSOLUTE";
+run();
+myTransOut << "\n"; transOut.display();
+transient.dxTransLimit = oldLimit;
+transient.dxTransLimitType = oldType;
+// Test 3.4.3 - change dtExpandTolerance
+myTransOut << "\nTest 3.4.3 - increase dtExpandTolerance by factor of
+three.\n"
+<< "------------------------------------------------------------\n";
+//cout << "Test 3.4.3\n";
+resetModel();
+transient.baseTimeStep = 0.025;
+real oldTol = transient.dtExpandTolerance;
+transient.dtExpandTolerance = 3.0 * oldTol;
+myTransOut << " (new dtExpandTolerance = " << transient.dtExpandTolerance
+<< ")";
+run();
+myTransOut << "\n"; transOut.display();
+transient.dtExpandTolerance = oldTol;
+// Test 3.4.4 - change dtRelaxFactor
+myTransOut << "\nTest 3.4.4 - set dtRelaxFactor = 1.0\n"
+<< "------------------------------------------------------------\n";
+//cout << "Test 3.4.4\n";
+resetModel();
+transient.baseTimeStep = 0.025;
+real oldRelax = transient.dtRelaxFactor;
+transient.dtRelaxFactor = 1.0000;
+run();
+myTransOut << "\n"; transOut.display();
+transient.dtRelaxFactor = oldRelax;
+transient.timeStepMethod = "CONSTANT_DT";
+transient.baseTimeStep = 0.025;
+// run to steady-state as setup for next point.
+setOption("solutionMode","STEADY_STATE");
+run();
+// clear viewers
+dumper.reset();
+transOut.reset();
+// Test 4.3 Run to a SET_DERIVATIVE (for x) of 1.0
+myTransOut << "\n\nTest 4.3 Run x to a SET_DERIVATIVE = 1.0"
+<< "\n-----------------------------------------------\n";
+//cout << "Test 4.3\n";
+setOption("solutionMode", "STEADY_STATE");
+// override on xInteg alone
+xInteg.solutionMode = "SET_DERIVATIVE";
+xInteg.desiredDerivValue = 1.0;
+run();
+dumper.display();
+transOut.reset();
+myTransOut << "\n\nContinue run from there to quiescence"
+<< "\n---------------------------------------\n";
+setOption("solutionMode", "TRANSIENT");
+initializeHistory();
+transient.stopTime = 10.;
+transient.terminateCondition = "quiescence()";
+run();
+myTransOut << "\n"; transOut.display();
+// Test 6.1.2 - Run baseline case with integErrorForm = INTEGRAL
+myTransOut << "\n\nTest 6.1.2 Run baseline case with integErrorForm =
+INTEGRAL"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.1.2\n";
+resetModel();
+transient.integErrorForm = "INTEGRAL";
+run();
+myTransOut << "\n"; transOut.display();
+// Test 6.1.3 - Run baseline case with integErrorForm = DIFFERENTIAL
+myTransOut << "\n\nTest 6.1.3 Run baseline case with integErrorForm " << "= DIFFERENTIAL"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.1.3\n";
+// reset the input and run once to reset the derivative (output)
+resetModel();
+transient.integErrorForm = "DIFFERENTIAL";
+run();
+myTransOut << "\n"; transOut.display();
+transient.integErrorForm = "VARIABLE";
+// Test 6.2.1 - Run baseline with integrationType = "GEAR_2ND_ORDER"
+myTransOut << "\n\nTest 6.2.1 Run baseline case with integrationType" << "= GEAR_2ND_ORDER"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.2.1\n";
+resetModel();
+transient.integrationType = "GEAR_2ND_ORDER";
+run();
+myTransOut << "\n"; transOut.display();
+// Test 6.2.2 - Run baseline with integrationType = "GEAR_1ST_ORDER"
+myTransOut << "\n\nTest 6.2.2 Run baseline case with integrationType"
+<< "= GEAR_1ST_ORDER\n(shoutld be identical to 1.1 results)"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.2.2\n";
+resetModel();
+transient.integrationType = "GEAR_1ST_ORDER";
+run();
+myTransOut << "\n"; transOut.display();
+// Test 6.2.3 - Run baseline with integrationType = "TRAPEZOIDAL"
+myTransOut << "\n\nTest 6.2.3 Run baseline case with integrationType" << "= TRAPEZOIDAL"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.2.3\n";
+resetModel();
+transient.integrationType = "TRAPEZOIDAL";
+run();
+myTransOut << "\n"; transOut.display();
+// Test 6.2.4.1 - Run basline with integrationType = "EULER"
+myTransOut << "\n\nTest 6.2.4.1 Run baseline case to stopTime = 10."
+<< "\nwith integrationType = EULER"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.2.4.1\n";
+resetModel();
+transient.clear();
+xInteg.integrationType = "EULER"; // this will also lock the attribute
+transient.setup();
+initializeHistory();
+// set the termination criteria to "", since quiescence won't work
+transient.terminateCondition = "";
+transient.stopTime = 10.0;
+run();
+myTransOut << "\n"; transOut.display();
+// Test 6.2.4.2 - Run basline with integrationType = "EULER"
+myTransOut << "\n\nTest 6.2.4.2 Run baseline case to stopTime = 10."
+<< "\nwith integrationType = EULER and explicitIntegOrder = AFTER"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.2.4.2\n";
+resetModel();
+transient.explicitIntegOrder = "AFTER";
+run();
+myTransOut << "\n"; transOut.display();
+transient.clear();
+transient.explicitIntegOrder = "BEFORE";
+xInteg.lockIntegrationType = FALSE;
+transient.integrationType = "GEAR_1ST_ORDER";
+transient.setup();
+// Test 6.2.5.1 - Run baseline with integrationType = "GEAR_2ND_ORDER"
+// and baseTimeStep = 2.5
+myTransOut << "\n\nTest 6.2.5.1 Run baseline case with integrationType"
+<< "= GEAR_2ND_ORDER\nand baseTimeStep = 2.5"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.2.5.1\n";
+resetModel();
+transient.baseTimeStep = 2.5; // must set timeStep in TransientExec after
+// initializeHistory is done. Otherwise, the baseTimeStep overwrites it.
+transient.maxTimeStep = 3.0; // need to increase max too.
+transient.terminateCondition = "";
+transient.stopTime = 10.0; // run out to 10 sec.
+transient.integrationType = "GEAR_2ND_ORDER";
+run();
+myTransOut << "\n"; transOut.display();
+// Test 6.2.5.2 - Run baseline with integrationType = "TRAPEZOIDAL"
+myTransOut << "\n\nTest 6.2.5.2 Run baseline case with integrationType"
+<< "= TRAPEZOIDAL\nand baseTimeStep = 2.5"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.2.5.2\n";
+resetModel();
+transient.integrationType = "TRAPEZOIDAL";
+run();
+myTransOut << "\n"; transOut.display();
+// put things back to original condition
+transient.baseTimeStep = .025;
+transient.maxTimeStep = 1.0;
+transient.integrationType = "GEAR_1ST_ORDER";
+// Test 6.3.2 - Run basline with extraIndepUpdate = TRUE and
+// toleranceScaleFactor = 1.0
+myTransOut << "\n\nTest 6.3.2 Run baseline case to quiescence"
+<< "\nwith extraIndepUpdate = TRUE and toleranceScaleFactor = 1.0"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.3.2\n";
+resetModel();
+transient.extraIndepUpdate = TRUE;
+transient.terminateCondition = "quiescence()";
+run();
+myTransOut << "\n"; transOut.display();
+// Test 6.3.3 - Run basline with extraIndepUpdate = FALSE and
+// toleranceScaleFactor = 10.0
+myTransOut << "\n\nTest 6.3.3 Run baseline case to quiescence"
+<< "\nwith extraIndepUpdate = FALSE and toleranceScaleFactor = 10.0"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.3.3\n";
+resetModel();
+transient.extraIndepUpdate = FALSE;
+transient.toleranceScaleFactor = 10.0;
+run();
+myTransOut << "\n"; transOut.display();
+// Test 6.3.4 - Run basline with extraIndepUpdate = TRUE and
+// toleranceScaleFactor = 10.0
+myTransOut << "\n\nTest 6.3.4 Run baseline case to quiescence"
+<< "\nwith extraIndepUpdate = TRUE and toleranceScaleFactor = 10.0"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.3.4\n";
+resetModel();
+transient.extraIndepUpdate = TRUE;
+run();
+myTransOut << "\n"; transOut.display();
+// Test 6.4.2 - Run baseline case to quiescence with predictorType = LAGRANGE
+myTransOut << "\n\nTest 6.4.2 Run baseline case to quiescence"
+<< "\nwith predictorType = LAGRANGE"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.4.2\n";
+resetModel();
+transient.extraIndepUpdate = FALSE;
+transient.toleranceScaleFactor = 1.0;
+transient.predictorMethod = "LAGRANGE";
+run();
+myTransOut << "\n"; transOut.display();
+// Test 6.4.3 - Run baseline case to quiescence with predictorType = NONE
+myTransOut << "\n\nTest 6.4.3 Run baseline case to quiescence"
+<< "\nwith predictorType = NONE"
+<< "\n----------------------------------------------------------------\n";
+//cout << "Test 6.4.3\n";
+resetModel();
+transient.predictorMethod = "NONE";
+run();
+myTransOut << "\n"; transOut.display();

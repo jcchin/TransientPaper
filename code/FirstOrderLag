@@ -1,0 +1,78 @@
+// First Order Lag Model
+// for testing the NPSS Tranient capability
+//
+class InterpLag extends Element {
+	real x, dxdt, y, tau, localTime;
+	void calculate() {
+		dxdt = (y-x) / tau;
+	}
+};
+
+// analytic recursion relation for a "clamped ramp"
+// to be run in the ExecutionSequence and compared to the
+// implicit solution.
+class AnalyticFOL extends Element {
+	real x, y, tau;
+	void calculate() {
+		x = y * (1.000 - (tau/timeStep)*exp(-time/tau)*(exp(timeStep/tau)-
+		1.000));
+	}
+};
+
+Element InterpLag myLag { }
+Element AnalyticFOL benchMark {
+	real theError;
+	void postexecute() {
+		theError = myLag.x - x;
+	}
+};
+
+OutFileStream myTransOut { filename = "cout"; append = TRUE; }
+DataViewer VarDumpViewer dumper {
+	variableList = {"myLag.*", "solver.*", "xInteg.*", "xIndep.*"};
+	outStreamHandle = "myTransOut";
+}
+DataViewer CaseRowViewer transOut {
+	titleBody = "Transient Output for First-Order-Lag model";
+	titleVars = {};
+	pageWidth = 0;
+	pageHeight = 0;
+	if (getenv("NPSS_CONFIG") == "nt"){
+		variableList = {
+			"time", "solver.iterationCounter: ???? = iters",
+			"solver.numJacobians: ???? = Jacobians",
+			"solver.numBroydens: ???? = Broydens",
+			"myLag.y: ??.?????", 
+			"myLag.x: ??.?????",
+			"myLag.dxdt: ??.?????",
+			"benchMark.x: ??.????",
+			"benchMark.theError : ???.????E???? = benchMark.error"
+		};
+	}
+	else {
+		variableList = {
+			"time",
+			"solver.iterationCounter: ???? = iters",
+			"solver.numJacobians: ???? = Jacobians",
+			"solver.numBroydens: ???? = Broydens",
+			"myLag.y: ??.?????",
+			"myLag.x: ??.?????",
+			"myLag.dxdt: ??.?????",
+			"benchMark.x: ??.?????",
+			"benchMark.theError : ???.????E??? = benchMark.error"
+		};
+	}
+	outStreamHandle = "myTransOut";
+}
+
+Independent xIndep { varName = "myLag.x"; }
+Integrator xInteg {
+	stateName = "myLag.x";
+	derivativeName = "myLag.dxdt";
+	eq_rhs = "myLag.y";
+	eq_lhs = "myLag.x";
+}
+solver.addIndependent("xIndep");
+solver.addDependent("xInteg");
+executionSequence = {"myLag"};
+postExecutionSequence = {"benchMark", "transOut"};
