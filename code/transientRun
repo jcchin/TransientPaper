@@ -1,0 +1,30 @@
+//------------------------------------
+// Run Two Steady State Cases
+//------------------------------------
+setOption( "solutionMode", "STEADY_STATE" ); 
+PERF.FnTarget = MinThrust;
+run();
+Wf1 = Burner.Wfuel
+PERF.FnTarget = MaxThrust;
+run();
+Wf2 = Burner.Wfuel
+
+//------------------------------------
+//Run Two Transient Cases
+//------------------------------------
+RunCondition.eq_rhs = "Ramp( time, 0.2, 3.0, Wf1, Wf2 )";
+setOption( "solutionMode", "TRANSIENT" );
+initializeHistory();
+transient.baseTimeStep = 0.10;
+transient.stopTime = 0.60;
+run(); // t = 0 -> 0.6
+transient.stopTime = 3.60; //extend same transient run
+run(); // t = 0.6 -> 3.6
+
+transient.clear();
+RunCondition.eq_rhs = "Ramp( time, 0.2, 2.0, Wf1, Wf2 )";
+solver.forceNewJacobian = TRUE;
+transient.setup();
+time = 0.;
+transient.stopTime = 2.40;
+run(); //new transient case, t = 0 -> 2.4

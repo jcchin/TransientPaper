@@ -1,5 +1,24 @@
-solver.removeIndependent( "FuelControl" ); //remove SS solver variables
-solver.removeDependent( "ControlErr" );
+//------------------------------------
+// Transient Row Viewer
+//------------------------------------
+OutFileStream transientStream { filename = "tout"; }
+DataViewer CaseRowViewer transientTrace {
+	titleBody = " ";
+	titleVars = { };
+	variableList = {
+		"time: ??.???? ",
+		"Amb0.W : ???.?? = Air Flow",
+		"HPC.Fl_O.Pt : ????.?? = Pt3",
+		"HPC.Fl_O.Tt : ????.?? = Tt3",
+		"LPshaft.Nmech : ??????.?? = LPspeed",
+	};
+	pageWidth = 132;
+	pageHeight = 0.;
+	outStreamHandle = "transientStream";
+}
+//------------------------------------
+// Call to Viewer
+//------------------------------------
 solver.postExecutionSequence = { "transientTrace" }; //CaseViewer function
   //^executes after solver convergence at each time step
 run();

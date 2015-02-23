@@ -1,0 +1,24 @@
+//------------------------------------
+// Solver Variable Definition
+//------------------------------------
+Independent fuel_indep {
+    varName = "Burner.Wfuel";
+}
+Dependent trans_Condition {
+    eq_lhs = "Burner.Wfuel";
+    eq_rhs = "RampOutput";  //needs to be recalculated every time step
+}
+//------------------------------------
+// Transient Solver Setup
+//------------------------------------
+solver.addIndependent("fuel_indep"); 
+solver.addDependent("trans_Condition");
+
+solver.presolverSequence("fuelCalc"); //backwards compatible alias
+//solver.preExecutionSequence("fuelCalc"); //equivalent statement
+//------------------------------------
+// fuelCalc function definition
+//------------------------------------
+void fuelCalc(){ //this is run before every time step
+	real RampOutput = Ramp( time, 0.2, 3.0, Wf1, Wf2 );
+}

@@ -145,9 +145,9 @@ termination criteria as described above.
 \subsection{Transient Input}
 
 Time dependent input variables must be defined and evaluated at every time step during a simulation, and therefore cannot simply be
-assigned to a constant value before executing the \texttt{run()} command. Variable values can be calculated explicitly for every times
-step or calculated implicitly using built-in table and interpolation routines. The code snippets below show both of these methods,
-respectively, for defining fuel flow as shown in figure \ref{f:ramp}.
+assigned to a constant value before executing the \texttt{run()} command. Time dependent variables can be calculated explicitly with
+piecewise functions for every time step or scheduled using built-in table and interpolation routines.
+The code snippets below show both of these methods, respectively, for defining fuel flow as shown in figure \ref{f:ramp}.
 
 \begin{figure}[H]
 \centering
@@ -166,24 +166,50 @@ Or the same function could be built using a table.
  \inputminted[]{c++}{code/rampTb}
  \end{adjustwidth} 
 
-The last line of each of these variable definition functions tells NPSS how to evaluate the calculated fuel flow input. These dynamic input
-variables can evaluated in one of three ways. The first way involves creating a set of independent/dependent equations as show above.
-The variable definition function is set as a the right hand side (\texttt{rhs}) of a dependent equation, with the left hand side set to fuel
-flow. A second variable must be defined as the independent variable and is varied by the solver until the dependent equation is satisfied.
+The last line of each of these example functions tells NPSS how to evaluate the calculated fuel flow input.
+These dynamic input variables can evaluated in one of three ways. 
+The first way involves creating a set of independent/dependent equations as show above.
+The variable definition function is set as a the right hand side (\texttt{rhs}) of a dependent equation,
+with the left hand side set to fuel flow. 
+A second variable must be defined as the independent variable and is varied by the solver until the dependent equation is satisfied.
 
-[Independent/Dependent Code Snippet]
+ \begin{adjustwidth}{1cm}{-1cm}
+ \inputminted[]{c++}{code/solverSetup}
+ \end{adjustwidth} 
 
- The second method involves setting the variable of interest as a constraint. This method is appropriate if keeping the variable within a
- specified bound is more important than driving the variable to an exact value. This behavior can be beneficial for several operations, for
- example if the user wanted to develop a schedule of limiters on specific engine state. These constraints can be defined as shown below.
+ The second method involves setting the variable of interest as a constraint.
+ This method is appropriate if keeping the variable within a specified bound
+ is more important than driving the variable to an exact value.
+ This behavior can be beneficial for several operations, for
+ example if the user wanted to develop a schedule of limiters on specific engine state.
+ These constraints can be defined as shown below.
  
- [Constraint Code Snippet]
+ \begin{adjustwidth}{1cm}{-1cm}
+ \inputminted[]{c++}{code/constraintSetup}
+ \end{adjustwidth} 
  
- A third method for setting user defined variables is done using the NPSS supplied \texttt{solversequence()} method. This allows users to simply append a function to the end of every time-step calculation loop and evaluate any variable to a specified value.
+Although the constraint is defined identically to a dependent variable, it is applied to a pre-existing independent variable.
+The example shown above varies fuel flow to reach a specified thrust target, but only as long as a temperature constraint isn't violated.
+As long as this constraint is activated, fuel flow will follow the temperature limit and ignore the thrust target.
+Since numerous constraints can be applied to a dependent variable,
+optional arguments can be supplied to specify if a variable is a minimum or maximum limit.
+The optional limit priority argument determine which limit to ignore if both a min and max limit are violated.
+In rare cases, the change in error is negatively correlated to changes in the independent variable,
+leading to the solver to get locked into alternating limits. One such case would be varying fuel flow to reach a target thrust,
+with an additional constraint on minimum and maximum low pressure compressor Rlines.
+Adjusting the min/max and the sign of the slope argument can be used to solve this numerical instability.
+
+A third method for setting user defined variables is done using the NPSS supplied \texttt{solversequence()} method.
+This allows users to simply append a function to the beginning or end of every time-step calculation loop
+and evaluate any variable to a specified value.
  
- [solver sequence code snippet]
+ \begin{adjustwidth}{-1cm}{-1cm}
+ \inputminted[]{c++}{code/solverSequence}
+ \end{adjustwidth} 
  
-Example code demonstrating all of these methods can be found in appendix \cref{app:transient}.
+This snippet performs an equivalent operation to the first method example snippet.
+Although the computational differences are minor, it may be desirable to separate the logic for organizational reasons.
+Example code demonstrating all of these methods can be found in \cref{app:transient}.
 
 \subsection{Transient Output}
 
@@ -192,9 +218,36 @@ invoked using the ``\texttt{solver.postExecutionSequence}" method. This method t
 correspond to viewer objects or function names. If a PageViewer or DataViewer is called, it will automatically invoke the
 \texttt{display()} method of these objects, if a CaseViewer is called, only the \texttt{update()} method will be invoked.
 
-\begin{adjustwidth}{-1cm}{-1cm}
+ \begin{adjustwidth}{-1cm}{-1cm}
  \inputminted[]{c++}{code/transient1}
  \end{adjustwidth} 
+
+\subsection{Transient Run Files}
+
+In summary, a transient model requires the following steps:
+
+\begin{enumerate}
+\item Setting transient driver inputs and intitial conditions
+\item Configuring solver variables: independents, dependents, and constraints
+\item Configuring solver parameters: solutionMode, time boundary, time step, tolerances, termination criteria
+\item Setting output viewers
+\end{enumerate}
+
+A run file can contain multiple types of simulations chained together. 
+In the following example, a steady-state case is first run initialize the state of the engine and
+to determine bounds on a transient input driver.
+A transient case is then run from t=0 to t=0.6, paused, then resumed to t=3.6.
+Finally a new transient run clears the previously integrated engine states and runs a fresh case from t=0 to t=2.4.
+
+ \begin{adjustwidth}{1cm}{-1cm}
+ \inputminted[]{c++}{code/transientRun}
+ \end{adjustwidth} 
+
+\subsection{Advanced Dynamics Modeling}
+
+Users can find additional transient solver options in the NPSS user's guide \cite[chap.~18]{NPSS} for simulating
+more advanced engine dynamics such as custom first order-lags, adaptive time-stepping, custom integrators or
+predictor calculations.
 
 \section{File Transfer}
 \subsection{Batch Run}

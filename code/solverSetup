@@ -1,0 +1,17 @@
+
+//------------------------------------
+// Solver Variable Definition
+//------------------------------------
+Independent fuel_indep {
+    varName = "Burner.Wfuel";
+}
+Dependent trans_Condition {
+    eq_lhs = "Burner.Wfuel";
+    eq_rhs = "Ramp( time, 0.2, 3, 0.1, 2.9 )"; 
+            //Ramp(time, tstart, duration, Wstart, Wfinish)
+}
+//------------------------------------
+// Transient Solver Setup
+//------------------------------------
+solver.addIndependent("fuel_indep"); 
+solver.addDependent("trans_Condition");

@@ -1,0 +1,18 @@
+//------------------------------------
+// Constraint Definition
+//------------------------------------
+Dependent Tt4_Max_Limit {
+    eq_lhs = "Burner.Fl_O.Tt";
+    eq_rhs = "3550";
+}
+Dependent ThrustTarget{
+    eq_lhs = "PERF.Fn";
+	eq_rhs = "PERF.FnTarget";
+}
+//------------------------------------
+// Transient Solver Setup
+//------------------------------------
+solver.addIndependent( "Burner.Wfuel" );
+solver.addDependent( "ThrustTarget" );
+//add additional constraint(Name,Min/Max,Priority,Slope);
+ThrustTarget.addConstraint("Tt4_Max_Limit","MAX",1,1);
