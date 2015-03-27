@@ -69,7 +69,7 @@ equations largely in the same way it handles steady-state solutions. However for
 systems, some of the equations require engine state integration rather than simply driving imbalances to zero. 
 
 \subsection{Solver and Integration Methods}
-NPSS supports multiple integration types, that are outlined in the NPSS users guide.
+NPSS supports multiple integration types that are outlined in the NPSS users guide.
 \cite[chap.~7.1]{NPSS} Table \ref{tab:Integration} summarizes the available methods, with a 
 first-order differential equation for spool speed used as an example: 
 
@@ -136,18 +136,17 @@ transient { //set as a group
 Before running transiently, the user must first ensure that each engine component with transient
 specific attributes is properly initialized. Common components with special transient properties
 include, shafts, springs, control volumes, heat exchangers, walls and thermal masses.
-After steady-state engine sizing occurs, it is often necessary to determine multiple power
-settings by running off-design cases, or trim the engine before initiating a transient. Once the
-model is trimmed, the transient model is setup by adding/removing solver variables, setting
-transient solver options, adding transient output viewers, and specifying time step and
-termination criteria as described above.
+After steady-state engine sizing occurs, engine state boundaries can be established by running multiple
+off-design power settings. Generating large tables of equilibrated or `trimmed' engine points
+throughout the flight envelopes ensures that transients can be run from any starting condition without
+starting imbalances.
 
-\subsection{Transient Input}
+\subsection{Transient Dependents and Constraints}
 
-Time dependent input variables must be defined and evaluated at every time step during a simulation, and therefore cannot simply be
+Time-varying inputs, dependents, and constraints must be defined and evaluated at every time step during a simulation, and therefore cannot simply be
 assigned to a constant value before executing the \texttt{run()} command. Time dependent variables can be calculated explicitly with
 piecewise functions for every time step or scheduled using built-in table and interpolation routines.
-The code snippets below show both of these methods, respectively, for defining fuel flow as shown in figure \ref{f:ramp}.
+The code snippets below show both of these methods respectively, for defining fuel flow as shown in figure \ref{f:ramp}.
 
 \begin{figure}[H]
 \centering
@@ -167,9 +166,8 @@ Or the same function could be built using a table.
  \end{adjustwidth} 
 
 The last line of each of these example functions tells NPSS how to evaluate the calculated fuel flow input.
-These dynamic input variables can evaluated in one of three ways. 
-The first way involves creating a set of independent/dependent equations as show above.
-The variable definition function is set as a the right hand side (\texttt{rhs}) of a dependent equation,
+These dynamic variables can evaluated by creating a set of independent/dependent equations as show above.
+The variable definition function is set as the right hand side (\texttt{rhs}) of a dependent equation,
 with the left hand side set to fuel flow. 
 A second variable must be defined as the independent variable and is varied by the solver until the dependent equation is satisfied.
 
@@ -177,12 +175,12 @@ A second variable must be defined as the independent variable and is varied by t
  \inputminted[]{c++}{code/solverSetup}
  \end{adjustwidth} 
 
- The second method involves setting the variable of interest as a constraint.
- This method is appropriate if keeping the variable within a specified bound
- is more important than driving the variable to an exact value.
- This behavior can be beneficial for several operations, for
- example if the user wanted to develop a schedule of limiters on specific engine state.
- These constraints can be defined as shown below.
+
+Additional dependent equations can be applied to a single independent variable in the form of constraints.
+This method is appropriate when the user intends to drive an output variable transiently,
+such as thrust, while ensuring no engine constraints are violated.
+This behavior can be beneficial for simulating engine limiters in a controller, and managing 
+competing constraints on several variables.
  
  \begin{adjustwidth}{1cm}{-1cm}
  \inputminted[]{c++}{code/constraintSetup}
@@ -193,15 +191,16 @@ The example shown above varies fuel flow to reach a specified thrust target, but
 As long as this constraint is activated, fuel flow will follow the temperature limit and ignore the thrust target.
 Since numerous constraints can be applied to a dependent variable,
 optional arguments can be supplied to specify if a variable is a minimum or maximum limit.
-The optional limit priority argument determine which limit to ignore if both a min and max limit are violated.
+The optional `limit priority' argument determines which limit to ignore if competing min and max limits are violated.
 In rare cases, the change in error is negatively correlated to changes in the independent variable,
 leading to the solver to get locked into alternating limits. One such case would be varying fuel flow to reach a target thrust,
 with an additional constraint on minimum and maximum low pressure compressor Rlines.
-Adjusting the min/max and the sign of the slope argument can be used to solve this numerical instability.
+Flipping the min or max and the `sign of the slope' arguments can be used to resolve this numerical instability.
 
-A third method for setting user defined variables is done using the NPSS supplied \texttt{solversequence()} method.
+A further abstracted method of setting user defined variables is done using the NPSS supplied \texttt{solversequence()} method.
 This allows users to simply append a function to the beginning or end of every time-step calculation loop
-and evaluate any variable to a specified value.
+and evaluate any variable to a specified value. While functionally identical to the methods provided above,
+this provides the user with another option for organizing logic and separating concerns.
  
  \begin{adjustwidth}{-1cm}{-1cm}
  \inputminted[]{c++}{code/solverSequence}
@@ -214,7 +213,7 @@ Example code demonstrating all of these methods can be found in \cref{app:transi
 \subsection{Transient Output}
 
 In order to capture the engine state after convergence at every time step, standard viewers or custom functions can be
-invoked using the ``\texttt{solver.postExecutionSequence}" method. This method takes an array of strings that
+invoked for transient cases using the ``\texttt{solver.postExecutionSequence}" method. This method takes an array of strings that
 correspond to viewer objects or function names. If a PageViewer or DataViewer is called, it will automatically invoke the
 \texttt{display()} method of these objects, if a CaseViewer is called, only the \texttt{update()} method will be invoked.
 
@@ -224,20 +223,21 @@ correspond to viewer objects or function names. If a PageViewer or DataViewer is
 
 \subsection{Transient Run Files}
 
-In summary, a transient model requires the following steps:
+In summary, a transient model generally requires the minimum following steps:
 
 \begin{enumerate}
-\item Setting transient driver inputs and intitial conditions
-\item Configuring solver variables: independents, dependents, and constraints
-\item Configuring solver parameters: solutionMode, time boundary, time step, tolerances, termination criteria
-\item Setting output viewers
+\item Defining transient driver inputs and intitial conditions
+\item Configuring additional solver variables: independents, dependents, and constraints
+\item Configuring transient solver parameters: solutionMode, time boundary, time step, tolerances, termination criteria
+\item Configuring output viewers
 \end{enumerate}
 
-A run file can contain multiple types of simulations chained together. 
-In the following example, a steady-state case is first run initialize the state of the engine and
+It's generally recommended to organize each of these steps in separate files or folders to better manage complexity.
+Each aspect is then generally orchestrated in a run file containing numerous simulations chained together. 
+In the following example, a steady-state case is first run to initialize the state of the engine and
 to determine bounds on a transient input driver.
 A transient case is then run from t=0 to t=0.6, paused, then resumed to t=3.6.
-Finally a new transient run clears the previously integrated engine states and runs a fresh case from t=0 to t=2.4.
+Finally, a new transient run clears the previously integrated engine states and runs a fresh case from t=0 to t=2.4.
 
  \begin{adjustwidth}{1cm}{-1cm}
  \inputminted[]{c++}{code/transientRun}
@@ -249,15 +249,28 @@ Users can find additional transient solver options in the NPSS user's guide \cit
 more advanced engine dynamics such as custom first order-lags, adaptive time-stepping, custom integrators or
 predictor calculations.
 
-\section{File Transfer}
-\subsection{Batch Run}
-This method involves:
+While possible to implement in NPSS, many advanced modeling processes are better suited
+for other development environments such as Matlab/Simulink.
+The following sections outline strategies for interfacing NPSS with Matlab.
+
+\section{Passing Data Between NPSS and Matlab}
+\subsection{Raw File I/O}
+
+The most simplistic and straightforward method for passing information is by automated file passing and batched system calls.
+Matlab can be used as an NPSS templating engine, writing dynamically specified run scripts, which are subsequently
+copied to the NPSS directory and executed from a system call.
+
+File I/O is undesirable from a performance aspect, but can be acceptable if the total number of round-trips between
+NPSS and Matlab are minimized. This method is suitable for upfront engine initialization calculations, 
+and functions where programming simplicity is more important than computational efficiency.
+
+A single round-trip generally involves the following steps:
 
 \begin{enumerate}
-  \item Specifying run cases in Matlab, programatically creating the batch and input files
-  \item Transfer cases to NPSS
-  \item Run Cases, output in matlab-syntax
-  \item Transfer output back to Matlab
+  \item Specify run cases, programatically creating the batch and input files $[Matlab]$
+  \item Transfer cases to the NPSS model directory $[Matlab \rightarrow NPSS]$
+  \item Run Cases, output in matlab-syntax $[NPSS]$
+  \item Transfer output files back to Matlab working directory $[NPSS \rightarrow Matlab]$
 \end{enumerate}
 
 \subsection{Transient}

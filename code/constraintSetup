@@ -7,7 +7,7 @@ Dependent Tt4_Max_Limit {
 }
 Dependent ThrustTarget{
     eq_lhs = "PERF.Fn";
-	eq_rhs = "PERF.FnTarget";
+    eq_rhs = "Ramp( time, 0.2, 5, minThrust, maxThrust )";
 }
 //------------------------------------
 // Transient Solver Setup

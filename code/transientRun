@@ -22,7 +22,7 @@ transient.stopTime = 3.60; //extend same transient run
 run(); // t = 0.6 -> 3.6
 
 transient.clear();
-RunCondition.eq_rhs = "Ramp( time, 0.2, 2.0, Wf1, Wf2 )";
+RunCondition.eq_rhs = "Ramp( time, 0.2, 5.0, Wf1, Wf2 )";
 solver.forceNewJacobian = TRUE;
 transient.setup();
 time = 0.;
