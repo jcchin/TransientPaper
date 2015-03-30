@@ -34,10 +34,11 @@ issues.
 \end{figure}
 
 Figure \ref{f:product_vs_time} shows a pedagogical representation of the general relation between
-accuracy and analysis set-up time. Lower fidelity (Lo-Fi) models are less accurate, but can be set
+accuracy and analysis set-up time, with the origin representing the perfect analysis capability.
+Lower fidelity (Lo-Fi) models are less accurate, but can be set
 up and modified relatively quickly. The darker gray path characterizes the tradtional design
 trend. Higher fidelity (Hi-Fi) models take longer to build, and therefore, aren't started until
-the low fidelity model nears completion. If designers attempt to introduce Hi-Fi models earlier in
+the low fidelity design reaches quiescence. If designers attempt to introduce Hi-Fi models earlier in
 the design, as shown by the light gray line shifted to the left, they quickly become outdated as
 the baseline model continues to undergo changes. Inevitably the models must be re-written to match
 the new Lo-Fi design and the path reverts to the dark gray route. The only way to incorporate the
@@ -63,10 +64,13 @@ designer's discretion.
 
 \section{Running NPSS Transiently}
 
+This paper assumes a basic understanding of the concepts required for steady-state engine modeling within NPSS.
+Foundational concepts are best introduced in the NPSS user's guide \cite{NPSS} and other introductory resources. \cite{JonesIntro} 
 Transient simulations represent the time-varying behavior of a system by finding a series of
 solutions at discrete time steps over a desired time interval. NPSS solves these systems of
 equations largely in the same way it handles steady-state solutions. However for transient
-systems, some of the equations require engine state integration rather than simply driving imbalances to zero. 
+systems, some of the equations require engine state integration rather than simply driving imbalances to zero.
+
 
 \subsection{Solver and Integration Methods}
 NPSS supports multiple integration types that are outlined in the NPSS users guide.
@@ -136,10 +140,18 @@ transient { //set as a group
 Before running transiently, the user must first ensure that each engine component with transient
 specific attributes is properly initialized. Common components with special transient properties
 include, shafts, springs, control volumes, heat exchangers, walls and thermal masses.
-After steady-state engine sizing occurs, engine state boundaries can be established by running multiple
-off-design power settings. Generating large tables of equilibrated or `trimmed' engine points
-throughout the flight envelopes ensures that transients can be run from any starting condition without
-starting imbalances.
+The following code snippet shows how the special \texttt{inertia} property may be initialized
+for a shaft component:
+
+ \begin{adjustwidth}{-1cm}{-1cm}
+ \inputminted[]{c++}{code/shaft.mdl}
+ \end{adjustwidth} 
+
+In steady-state mode, the solver will vary the shaft's mechanical speed to
+balance the input turbine torques with the output compressor port torques.
+In transient mode, the shaft speed is varied until the speed
+controlled by the solver is equal to the speed calculated by integrating
+the acceleration derived from the net engine torque.
 
 \subsection{Transient Dependents and Constraints}
 
@@ -166,7 +178,7 @@ Or the same function could be built using a table.
  \end{adjustwidth} 
 
 The last line of each of these example functions tells NPSS how to evaluate the calculated fuel flow input.
-These dynamic variables can evaluated by creating a set of independent/dependent equations as show above.
+These dynamic variables can evaluated by creating a set of independent/dependent equations as show below.
 The variable definition function is set as the right hand side (\texttt{rhs}) of a dependent equation,
 with the left hand side set to fuel flow. 
 A second variable must be defined as the independent variable and is varied by the solver until the dependent equation is satisfied.
@@ -191,35 +203,39 @@ The example shown above varies fuel flow to reach a specified thrust target, but
 As long as this constraint is activated, fuel flow will follow the temperature limit and ignore the thrust target.
 Since numerous constraints can be applied to a dependent variable,
 optional arguments can be supplied to specify if a variable is a minimum or maximum limit.
-The optional `limit priority' argument determines which limit to ignore if competing min and max limits are violated.
+The optional third argument of the \texttt{addConstraint} method, labeled as `priority' in the code snippet above,
+determines which limit to ignore if competing min and max limits are violated.
 In rare cases, the change in error is negatively correlated to changes in the independent variable,
 leading to the solver to get locked into alternating limits. One such case would be varying fuel flow to reach a target thrust,
 with an additional constraint on minimum and maximum low pressure compressor Rlines.
-Flipping the min or max and the `sign of the slope' arguments can be used to resolve this numerical instability.
+Flipping the `MIN' or `MAX' and the sign of the `slope' arguments can be used to resolve this numerical instability.
 
 A further abstracted method of setting user defined variables is done using the NPSS supplied \texttt{solversequence()} method.
 This allows users to simply append a function to the beginning or end of every time-step calculation loop
-and evaluate any variable to a specified value. While functionally identical to the methods provided above,
-this provides the user with another option for organizing logic and separating concerns.
+and evaluate any variable to a specified value. 
  
  \begin{adjustwidth}{-1cm}{-1cm}
  \inputminted[]{c++}{code/solverSequence}
  \end{adjustwidth} 
  
-This snippet performs an equivalent operation to the first method example snippet.
-Although the computational differences are minor, it may be desirable to separate the logic for organizational reasons.
+This code block performs a functionally equivalent operation to the first example snippet of this section.
+Although the computational differences are minor, this provides the user with another option for organizing logic.
+From an organizational standpoint,
+it may be desirable to fully separate concerns by keeping certain logic separate from the model itself.
 Example code demonstrating all of these methods can be found in \cref{app:transient}.
 
 \subsection{Transient Output}
 
 In order to capture the engine state after convergence at every time step, standard viewers or custom functions can be
-invoked for transient cases using the ``\texttt{solver.postExecutionSequence}" method. This method takes an array of strings that
+invoked for transient cases using the \texttt{solver.postExecutionSequence} method. This method takes an array of strings that
 correspond to viewer objects or function names. If a PageViewer or DataViewer is called, it will automatically invoke the
 \texttt{display()} method of these objects, if a CaseViewer is called, only the \texttt{update()} method will be invoked.
 
  \begin{adjustwidth}{-1cm}{-1cm}
  \inputminted[]{c++}{code/transient1}
  \end{adjustwidth} 
+
+Additional viewer reference material can be found in \cite[chap.~7.2.2, ~12, ~15.3.1]{NPSS}
 
 \subsection{Transient Run Files}
 
@@ -234,6 +250,10 @@ In summary, a transient model generally requires the minimum following steps:
 
 It's generally recommended to organize each of these steps in separate files or folders to better manage complexity.
 Each aspect is then generally orchestrated in a run file containing numerous simulations chained together. 
+After steady-state engine sizing occurs, engine state boundaries can be established by running multiple
+off-design power settings until key engine constraints become active. Generating large tables of equilibrated or `trimmed' engine points
+throughout the flight envelopes ensures that transients can be run from any starting condition without
+starting imbalances.
 In the following example, a steady-state case is first run to initialize the state of the engine and
 to determine bounds on a transient input driver.
 A transient case is then run from t=0 to t=0.6, paused, then resumed to t=3.6.
@@ -249,9 +269,10 @@ Users can find additional transient solver options in the NPSS user's guide \cit
 more advanced engine dynamics such as custom first order-lags, adaptive time-stepping, custom integrators or
 predictor calculations.
 
-While possible to implement in NPSS, many advanced modeling processes are better suited
-for other development environments such as Matlab/Simulink.
-The following sections outline strategies for interfacing NPSS with Matlab.
+While possible to implement in NPSS, many advanced modeling processes are can benefit
+from toolsets in other development environments such as Matlab/Simulink.
+The following sections outline strategies for interfacing NPSS with Matlab to take advantage of Matlab's large
+ecosystem of tools.
 
 \section{Passing Data Between NPSS and Matlab}
 \subsection{Raw File I/O}
@@ -269,11 +290,58 @@ A single round-trip generally involves the following steps:
 \begin{enumerate}
   \item Specify run cases, programatically creating the batch and input files $[Matlab]$
   \item Transfer cases to the NPSS model directory $[Matlab \rightarrow NPSS]$
-  \item Run Cases, output in matlab-syntax $[NPSS]$
+  \item Run Cases, output variables of interest in a matlab readable syntax $[NPSS]$
   \item Transfer output files back to Matlab working directory $[NPSS \rightarrow Matlab]$
 \end{enumerate}
 
-\subsection{Transient}
+This method works best when adhering to a few hueristics. Firstly, organize an engine repository
+into subfolders. Although it's possible to contain everything within a single file, separating code
+improves readability and simplifies automated file operations when they can be limited to a smaller subset of files.
+Table \ref{tab:Scaffolding} shows one such way to organize files.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|}
+\hline 
+Folder Name & Folder Function \\ 
+\hline \hline
+Maps & Off-design performance maps and large table data \\ 
+\hline 
+Inputs & Input files generated from external sources and subsequently fed into NPSS \\ 
+\hline 
+Outputs & Outputs files generated by NPSS \\ 
+\hline 
+Run & Files used to orchestrate run cases \\ 
+\hline 
+View & All viewer functions used to generate outputs \\ 
+\hline 
+Src & All other model and function source files \\ 
+\hline 
+\end{tabular} 
+\caption{An opinionated folder scaffolding for NPSS engine repositories}
+\label{tab:Scaffolding}
+\end{table}
+
+Breaking down folders, files, and functions into smaller pieces also improves code-reuse,
+which is generally desired for any codebase.
+This allows many general use functions to act as a common core shared between multiple engine architectures.
+
+Separating logic in this manner allows the programmer to better follow the third recommended hueristic
+of passing the minimum amount of information necessary between codes. If inputs are isolated in their own file
+it's much easer for external codes to pass in files containing only the necessary data, 
+while keeping any logic (and therefore potential side-effects) separated.
+
+External codes sometimes require more control than just specifying NPSS input data.
+If run cases must be dynamically configured during execution,
+NPSS provides command line arguments \cite[chap.~2.1]{NPSS}
+including preprocessor variables that can be used to invoke optional code.
+Example code demonstrating these methods can be found in \cref{app:transient}.
+
+It is possible to drive a closed-loop NPSS transient from an external code
+by passing files between programs after every single time step.
+
+\subsection{File-wrapped transient runs}
+
 
 Same process as above, except for every time step. Engine state saved to file.
 
@@ -286,7 +354,7 @@ Isolate engines into the following subgroups, Maps, Input, Output, Run, Src, Vie
 
 
 
-\section{Compiled S-function}
+\section{Compiled S-function (Memory-wrapped simulations)}
 \subsection{Background}
 For Fixed Wing project, TTECTrA (add background)
 
