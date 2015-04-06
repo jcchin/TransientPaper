@@ -9,8 +9,8 @@ transient engine analysis. The capability to create flexible ``low fidelity'' mo
 the earliest  conceptual design stages, where large design spaces can be explored relatively
 quickly. As the engine design starts to become more concrete, higher fidelity models are
 developed. These higher detail models are intrinsically more sensitive to design tweaks, and in
-general take longer to setup. They inherently require more stringently defined sets of boundary
-conditions and a specific configuration. A large variation in the baseline design could
+general take longer to setup. They inherently require more stringently defined configurations
+and boundary conditions. A large variation in the baseline design could
 potentially render entire higher fidelity analyses obsolete. Due to this weakness in adaptability,
 higher fidelity models are generally not created until the low-fidelity design has fully matured.
 This friction can partly be attributed to the differences in toolstes when transitioning to higher
@@ -179,9 +179,11 @@ Or the same function could be built using a table.
 
 The last line of each of these example functions tells NPSS how to evaluate the calculated fuel flow input.
 These dynamic variables can evaluated by creating a set of independent/dependent equations as show below.
-The variable definition function is set as the right hand side (\texttt{rhs}) of a dependent equation,
-with the left hand side set to fuel flow. 
-A second variable must be defined as the independent variable and is varied by the solver until the dependent equation is satisfied.
+The transient variable function is set as the right hand side (\texttt{rhs}) of a dependent equation,
+with the left hand side (\texttt{lhs}) set to fuel flow. 
+A second variable must be defined as the independent variable and is varied by the solver until the dependent
+equation is satisfied. The independent variable doesn't necessarily have to be the same as the dependent \texttt{lhs}
+as shown in this example.
 
  \begin{adjustwidth}{1cm}{-1cm}
  \inputminted[]{c++}{code/solverSetup}
@@ -210,7 +212,8 @@ leading to the solver to get locked into alternating limits. One such case would
 with an additional constraint on minimum and maximum low pressure compressor Rlines.
 Flipping the `MIN' or `MAX' and the sign of the `slope' arguments can be used to resolve this numerical instability.
 
-A further abstracted method of setting user defined variables is done using the NPSS supplied \texttt{solversequence()} method.
+A further abstracted method of setting user defined variables can be implemented using the NPSS supplied 
+\texttt{solversequence()} method.
 This allows users to simply append a function to the beginning or end of every time-step calculation loop
 and evaluate any variable to a specified value. 
  
@@ -227,7 +230,7 @@ Example code demonstrating all of these methods can be found in \cref{app:transi
 \subsection{Transient Output}
 
 In order to capture the engine state after convergence at every time step, standard viewers or custom functions can be
-invoked for transient cases using the \texttt{solver.postExecutionSequence} method. This method takes an array of strings that
+invoked for transient cases using the \texttt{solver} \texttt{.postExecutionSequence} method. This method takes an array of strings that
 correspond to viewer objects or function names. If a PageViewer or DataViewer is called, it will automatically invoke the
 \texttt{display()} method of these objects, if a CaseViewer is called, only the \texttt{update()} method will be invoked.
 
@@ -242,8 +245,8 @@ Additional viewer reference material can be found in \cite[chap.~7.2.2, ~12, ~15
 In summary, a transient model generally requires the minimum following steps:
 
 \begin{enumerate}
-\item Defining transient driver inputs and intitial conditions
-\item Configuring additional solver variables: independents, dependents, and constraints
+\item Defining transient engine components and initial conditions
+\item Defining transient input/output variables using independents, dependents, and constraints
 \item Configuring transient solver parameters: solutionMode, time boundary, time step, tolerances, termination criteria
 \item Configuring output viewers
 \end{enumerate}
@@ -255,7 +258,7 @@ off-design power settings until key engine constraints become active. Generating
 throughout the flight envelopes ensures that transients can be run from any starting condition without
 starting imbalances.
 In the following example, a steady-state case is first run to initialize the state of the engine and
-to determine bounds on a transient input driver.
+to determine fuel flow bounds on a transient input driver based on user-provided thrust targets.
 A transient case is then run from t=0 to t=0.6, paused, then resumed to t=3.6.
 Finally, a new transient run clears the previously integrated engine states and runs a fresh case from t=0 to t=2.4.
 
@@ -339,72 +342,60 @@ Example code demonstrating these methods can be found in \cref{app:transient}.
 
 It is possible to drive a closed-loop NPSS transient from an external code
 by passing files between programs after every single time step.
-
-\subsection{File-wrapped transient runs}
-
-
-Same process as above, except for every time step. Engine state saved to file.
-
-Adhering to the following design patterns simplifies the process:
-Isolate engines into the following subgroups, Maps, Input, Output, Run, Src, View.
-
--Separate inputs from run files (reduce size of files transfered, simplifies output from Matlab)
--Common run files between engines -Running with Dvariable flags.
--Common view files between engines
-
-
+However, due to it's inefficiency it is highly advisable to revert to
+memory-wrapped execution when driving a transient from Matlab.
 
 \section{Compiled S-function (Memory-wrapped simulations)}
-\subsection{Background}
-For Fixed Wing project, TTECTrA (add background)
 
-Compatibility: R2008 - R2010b 32-bit only.
+By compiling NPSS into a dynamically loaded library (\textt{dll}) it can be used as a
+level 2 S-function within Simulink.
+The \textt{NPSSSfunction.dll} requires a full NPSS release distribution,
+as well a 32-bit(only) Matlab distribution between R2007b - and R2010b.
+Future version of Matlab deprecate the compatability of \textt{dll}'s,
+in favor of strictly enforcing the use of custom Matlab Executable \textt{MEX} files.
 
-\subsection{NPSS Implementation}
+The S-function encapsulates NPSS within a simulink block that behaves like any other
+simulink block.
+Any standard output \texttt{stdout} from NPSS is redirected to the Matlab command window. 
+It's recommended to print any user-relevant error and dialog messages to \texttt{stdout} to aid in debugging.
 
-The following solver variables are common in a steady-state and transient run of a turbofan
-engine.
+The S-function requires two arguments, as shown in fig. \ref{f:DialogBox}.
+The S-function name refers to the name of the \texttt{dll} and the S-function parameter must point
+to a user-defined configuration file enclosed in single quotes (`').
 
-\begin{table}[H]
+\begin{figure}[H]
 \centering
-\begin{tabular}{|c|c|}
-\hline 
-Independent & Dependent \\ 
-\hline \hline
-\texttt{Ambient.ind\_W} & \texttt{Byp\_Nozz.dep\_Area} \\ 
-\hline 
-\texttt{Fan.S\_map.ind\_RlineMap} & \texttt{Core\_Nozz.dep\_Area} \\ 
-\hline 
-\texttt{HPC.S\_map.ind\_RlineMap} & \texttt{Fan.S\_map.dep\_errWc} \\ 
-\hline 
-\texttt{HPT.S\_map.ind\_parmMap} & \texttt{HPT.S\_map.dep\_errWp} \\ 
-\hline 
-\texttt{HP\_Shaft.ind\_Nmech} & \texttt{HP\_Shaft.integrate\_Nmech} \\ 
-\hline 
-\texttt{LPC.S\_map.ind\_RlineMap} & \texttt{LPC.S\_map.dep\_errWc} \\ 
-\hline 
-\texttt{LPT.S\_map.ind\_parmMap} & \texttt{LPT.S\_map.dep\_errWp} \\ 
-\hline 
-\texttt{LP\_Shaft.ind\_Nmech} & \texttt{LP\_Shaft.integrate\_Nmech} \\ 
-\hline 
-• & • \\ 
-\hline 
-• & • \\ 
-\hline 
-• & • \\ 
-\hline 
-\end{tabular} 
-\caption{Solver Variables for a basic turbofan configuration}
-\label{tab:SolverVariables}
-\end{table}
+\includegraphics[width=0.5\textwidth]{images/SFuncDialog}
+\caption{S Function Parameter Dialog Box}
+\label{f:DialogBox}
+\end{figure}
 
+Where the configuration bash file includes all necessary paths, global envinronment variables, and specifies
+which engine variables to expose to Simulink.
 
-\subsection{Matlab Implementation}
+ \begin{adjustwidth}{1cm}{-1cm}
+ \inputminted[]{bash}{code/engineConfig.bat}
+ \end{adjustwidth} 
+
+This particular example includes multiple folders on the path for the NPSS distribution itself,
+as well as paths within the engine folder.
+The final command line string runs a batch run file and two optional preprocessor flags called \texttt{DFlag1}
+and \texttt{DFlag2}. If not explicity added to the config file, the \texttt{engine.run} fill must also set
+the \texttt{NPSS\_TOP}, \texttt{NPSS\_DEV\_TOP}, \texttt{NPSS\_CONFIG}, and \texttt{NPSS\_TOP} environmental variables.
+
+In this example, the config file will create an S-function block with 1 input port,
+and 2 output ports each containing 5 muxed signals.
+Signals fed into this input port will subsequently be saved as the NPSS defined \texttt{Burner.Wfuel}
+variable during the transient exectution. Similarly, all the specified outputs will be fed as output
+signals of the Simulink block. Multiple defined variables will all be muxed into a single signal bus.
+
+For NASA's Advanced Air Transportation Technologies (AATT) Project, the S-function was used extensively
+on the Tool for Turbine Engine Closed-loop Transient Analysis program (TTECTrA). 
+In-depth examples of the S-functionc an be found in the source code. \ref{TTECTrA}
 
 \section{Source-to-Source Translation}
-\subsection{Background}
 
-The most abstract method of generating a transient model from NPSS is best described as "Source-to-Source Translation"
+The most abstract method of generating a transient model from NPSS is best described as ``Source-to-Source Translation"
 (SST), which is the process of converting one high level language to another. This pattern is appropriate when developing
 a transient engine model that may be completely separate, but originally derived, from NPSS.
 

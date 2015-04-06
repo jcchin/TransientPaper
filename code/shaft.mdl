@@ -1,26 +1,13 @@
 Element Shaft HP_Shaft  {
 	
-	ShaftInputPort HPC, HPT;
+	ShaftInputPort HPC, HPT; //list connected turbomachinery
 	HPX = 100.0; //Horsepower extracted from the shaft
 	Nmech = 10000; //mechanical speed
 	inertia = 2; //shaft inertia  **required for transient**
 	//dNqdt = Derivative of speed with respect to time (acceleration)
-	real dNcqdt; //corrected shaft acceleration
+	real dNcqdt; //user defined variable (corrected shaft acceleration)
 	void postexecute(){
 		dNcqdt = HP_Shaft.dNqdt / (HPC.Fl_I.Pt / Ambient.Fl_O.Ps);
 	}
    
-}
-
-Element Shaft LP_Shaft  {
-
-	ShaftInputPort FAN, LPC, LPT;
-	Nmech = 2450;
-	fracLoss = 0.0; //Fractional loss on the positive port torque
-	inertia = 20;
-	real dNcqdt;
-	void postexecute(){
-		dNcqdt = LP_Shaft.dNqdt / (LPC.Fl_I.Pt / Ambient.Fl_O.Ps);
-	}
-
 }
