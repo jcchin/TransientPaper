@@ -186,9 +186,9 @@ The transient variable function is set as the right hand side (\texttt{rhs}) of 
 with the left hand side (\texttt{lhs}) set to fuel flow. 
 A second variable must be defined as the independent variable and is varied by the solver until the dependent
 equation is satisfied.
-The independent variable and \texttt{eq_lhs} dependent variable don't necessarily have to be the same
+The independent variable and \texttt{eq\_lhs} dependent variable don't necessarily have to be the same
 as shown in this example. However, the independent variable must be able to indirectly influence the
-value of the dependent \texttt{eq_lhs}.
+value of the dependent \texttt{eq\_lhs}.
 
  \begin{adjustwidth}{1cm}{-1cm}
  \inputminted[]{c++}{code/solverSetup}
@@ -319,7 +319,7 @@ The following template generates an input file
  \inputminted[]{matlab}{code/dlmwrite.m}
  \end{adjustwidth} 
 
-which will create the following file, called NPSS_setpoint.input
+which will create the following file, called \texttt{NPSS\_setpoint.input}
 
  \begin{adjustwidth}{-1cm}{-1cm}
  \inputminted[]{matlab}{code/dlmOutput.m}
@@ -403,7 +403,7 @@ to a user-defined configuration file enclosed in single quotes (`').
 \end{figure}
 
 Where the configuration bash file includes all necessary paths, global envinronment variables, and specifies
-which engine variables to expose to Simulink.
+which engine variables to expose to Simulink. This file defines the engine application program interface (API).
 
  \begin{adjustwidth}{-1cm}{-1cm}
  \inputminted[]{bash}{code/engineConfig.bat}
@@ -431,7 +431,7 @@ NASA's Advanced Air Transportation Technologies (AATT) Project.
 \section{Source-to-Source Translation}
 
 The most abstract method of generating a transient model from NPSS is best described as ``Source-to-Source Translation"
-(SST), which is the process of converting one high level language to another. This pattern is appropriate when developing
+(SST), which is the process of converting one high level model to another. This pattern is appropriate when developing
 a transient engine model that may be completely separate, but originally derived, from NPSS.
 
 
