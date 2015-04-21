@@ -299,7 +299,7 @@ A single round-trip generally involves the following steps:
 \centering
 \includegraphics[width=0.5\textwidth]{images/roundTrip}
 \caption{Example DataFlow for File I/O}
-\label{f:DialogBox}
+\label{f:roundTrip}
 \end{figure}
 
 \begin{enumerate}
@@ -451,17 +451,24 @@ which is vital for maintaining code flexibility and adaptability across language
 
 This methodology is demonstrated with the Supersonic Component Engine Model (SCEM), which is a dynamic engine model
 developed to better understand the coupling between propulsion and  aero-servo-elastic modes of long slender
-supersonic vehicles. (Connolly, Kopasakis, \& Lemon, 2010)
+supersonic vehicles. \cite{Volume Dynamic} \cite{Turbofan}
 The model is designed to extend a steady-state NPSS model
 and better capture high bandwidth dynamics associated with large component volumes. 
 When the porting was first attempted by hand, 
 development proved to be challenging largely due to the number of engine components involved.
 Many of the challenges were associated with human-errors from manually replicating the model in a new language. 
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{images/original_scem_model}
+\caption{A legacy version of SCEM built manually}
+\label{f:legacySCEM}
+\end{figure}
+
 Although the SCEM solver is fundamentally different than the solver used by NPSS,
 both models were comprised of the same thermodynamic elements, linked together in the same order. 
 In order to automate the generation of an analogous NPSS model,
-both tools must follow the same object-oriented nature.
+both tools must follow the same object-oriented nature. \cite{MatlabOOP}
 By aligning the framework paradigms between NPSS and SCEM,
 it became possible to create a parallel Matlab “objects” for each standard element contained within NPSS.
 These Matlab objects contain all of the data book-keeping,
@@ -469,6 +476,15 @@ calculations and Simulink structures necessary to build many of the common eleme
 This automates the conversion of any NPSS model into an analogous Matlab model,
 greatly reducing the opportunity for human error and simplifying the process of extending the model.
 
+\begin{figure}[H]
+\centering
+ \begin{adjustwidth}{-3cm}{-2cm}
+\includegraphics[width=1.4\textwidth]{images/VCE5screencap}
+\end{adjustwidth} 
+\caption{A version of SCEM built automatically via SST}
+\label{f:sstSCEM}
+
+\end{figure}
 
 The object-oriented nature will hopefully make this easy
 by providing well-defined interfaces between the various component objects for developers, while
@@ -477,7 +493,13 @@ allow the program to be updated incrementally, and conversely, large program-wid
 implemented simultaneously for all elements of the same type. 
 
 Since NPSS engine models can vary widely in implementation details a SST is limited to recognizing
-standard elements, solver variables, and connections. 
+standard elements, solver variables, and connections.
+A NPSS developer could also include special attributes within standard components that would be
+ignored by NPSS, but parsed by the SST transcompiler to provide additional context.
+
+\begin{adjustwidth}{-0.5cm}{-0.5cm}
+ \inputminted[]{c++}{code/parser}
+ \end{adjustwidth} 
 
 
 \subsubsection{Component Library}
@@ -520,17 +542,9 @@ agree upon the level of control each program is responsible for.
 Often times tools have overlapping capabilities, so the developers must take extra care to
 avoid conflicting or competing logic between each tool-set.
 
-Developing standard modeling and message passing approaches are necessary to unify
-codebases and reducing development time ultimately leads to better overall designs.
-
-
-
-\cite{Turbofan}
-\cite{NonlinearDynamic}
-\cite{MatlabOOP}
-\cite{Volume Dynamic}
-\cite{TTECTrA}
-\cite{NPSS}
+Developing standard modeling and message passing practices and approaches are necessary to unify
+code-bases and development efforts.
+Investing the time to reduce development time can ultimately lead to better overall designs.
 
 
 \end{document}
