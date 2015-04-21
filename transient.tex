@@ -13,15 +13,13 @@ general take longer to setup. They inherently require more stringently defined c
 and boundary conditions. A large variation in the baseline design could
 potentially render entire higher fidelity analyses obsolete. Due to this weakness in adaptability,
 higher fidelity models are generally not created until the low-fidelity design has fully matured.
-This friction can partly be attributed to the differences in toolstes when transitioning to higher
+This friction can partly be attributed to the differences in tool-sets when transitioning to higher
 fidelity models. 
-
-\subsection{Design Cycle Overview}
 
 	From a life-cycle perspective, there comes a point when the prospect of re-design becomes
 prohibitively expensive and initial design decisions become cemented into the design. Any insights
 gained from more detailed analyses are constrained to these initial design choices. Naturally, a
-tradeoff exists on the amount of time spent in each analysis phase. Spending more time in the low
+trade-off exists on the amount of time spent in each analysis phase. Spending more time in the low
 fidelity phase could have large payoffs in the long run; however, without higher fidelity models
 it is hard to identify possible shortcomings such as those arising from operability and control
 issues.
@@ -36,7 +34,7 @@ issues.
 Figure \ref{f:product_vs_time} shows a pedagogical representation of the general relation between
 accuracy and analysis set-up time, with the origin representing the perfect analysis capability.
 Lower fidelity (Lo-Fi) models are less accurate, but can be set
-up and modified relatively quickly. The darker gray path characterizes the tradtional design
+up and modified relatively quickly. The darker gray path characterizes the traditional design
 trend. Higher fidelity (Hi-Fi) models take longer to build, and therefore, aren't started until
 the low fidelity design reaches quiescence. If designers attempt to introduce Hi-Fi models earlier in
 the design, as shown by the light gray line shifted to the left, they quickly become outdated as
@@ -44,7 +42,7 @@ the baseline model continues to undergo changes. Inevitably the models must be r
 the new Lo-Fi design and the path reverts to the dark gray route. The only way to incorporate the
 intermediate fidelity model earlier into the design process, is by absorbing the Int-Fi codes into
 the low fidelity codes as portrayed by the red line. Combining both disciplines into a unified code
-would accomplish this, but each toolset can remain distinct as long as the Int-Fi model is
+would accomplish this, but each tool-set can remain distinct as long as the Int-Fi model is
 adaptable enough to keep up with the rapid changes of the Low-Fi code.
 Creating a single unified program to satisfy every design need runs an equally high risk
 of becoming overly complex or cumbersome. 
@@ -59,7 +57,7 @@ The subsequent sections explore various design patterns to rapidly develop trans
 approach starts with a base model built with NPSS, and assumes the reader already has a basic
 understanding of how to construct a steady-state model. This paper focuses on further enhancements
 required to interface NPSS with Matlab codes. The first method being the simplest and most
-straightforward but performance constrained. The last being the most abstract. These methods
+straightforward but performance constrained, and the last being the most abstract. These methods
 aren't mutually exclusive and the specific implementation details could vary greatly based on the
 designer's discretion. 
 
@@ -186,8 +184,8 @@ The transient variable function is set as the right hand side (\texttt{rhs}) of 
 with the left hand side (\texttt{lhs}) set to fuel flow. 
 A second variable must be defined as the independent variable and is varied by the solver until the dependent
 equation is satisfied.
-The independent variable and \texttt{eq\_lhs} dependent variable don't necessarily have to be the same
-as shown in this example. However, the independent variable must be able to indirectly influence the
+The independent variable and the \texttt{eq\_lhs} dependent variable don't necessarily have to be the same
+as shown in this example. However, the independent variable must be able to influence the
 value of the dependent \texttt{eq\_lhs}.
 
  \begin{adjustwidth}{1cm}{-1cm}
@@ -214,7 +212,7 @@ The optional third argument of the \texttt{addConstraint} method, labeled as `pr
 determines which limit to ignore if competing min and max limits are violated.
 In rare cases, the change in error is negatively correlated to changes in the independent variable,
 leading to the solver to get locked into alternating limits. One such case would be varying fuel flow to reach a target thrust,
-with an additional constraint on minimum and maximum low pressure compressor Rlines.
+with an additional constraint on minimum and maximum low pressure compressor R-lines.
 Flipping the `MIN' or `MAX' and the sign of the `slope' arguments can be used to resolve this numerical instability.
 
 A further abstracted method of setting user defined variables can be implemented using the NPSS supplied 
@@ -260,8 +258,9 @@ which are are subsequently connected to the solver via independents, dependents,
 
 It's generally recommended to organize each of these steps in separate files or folders to better manage complexity.
 Each aspect is then generally orchestrated in a run file containing numerous simulations chained together. 
-After steady-state engine sizing occurs, engine state boundaries can be established by running multiple
-off-design power settings until key engine constraints become active. Generating large tables of equilibrated or `trimmed' engine points
+After on-design steady-state engine sizing occurs, engine state boundaries can be established by running multiple
+off-design power settings until key engine constraints become active.
+Generating large tables of equilibrated or `trimmed' engine points
 throughout the flight envelopes ensures that transients can be run from any starting condition without
 starting imbalances.
 In the following example, a steady-state case is first run to initialize the state of the engine and
@@ -280,7 +279,7 @@ more advanced engine dynamics such as custom first order-lags, adaptive time-ste
 predictor calculations.
 
 While possible to implement in NPSS, many advanced modeling processes are can benefit
-from specialized toolsets in other development environments such as Matlab/Simulink.
+from specialized tool-sets in other development environments such as Matlab/Simulink.
 The following sections outline strategies for interfacing NPSS with Matlab to take advantage of Matlab's large
 ecosystem of tools.
 
@@ -306,14 +305,14 @@ A single round-trip generally involves the following steps:
 \begin{enumerate}
   \item Specify run cases, programatically writing the necessary batch and input files $[Matlab]$
   \item Transfer cases to the NPSS model directory $[Matlab \rightarrow NPSS]$
-  \item Execute NPSS Run Cases, saving output variables of interest in a matlab readable syntax $[NPSS]$
+  \item Execute NPSS Run Cases, saving output variables of interest in a Matlab readable syntax $[NPSS]$
   \item Transfer output files back to Matlab where they can be loaded into the working directory $[NPSS \rightarrow Matlab]$
 \end{enumerate}
 
 
 Matlab can dynamically write input/run scripts, which are subsequently
 copied to the NPSS directory and executed from a system call.
-The following template generates an input file
+The following Matlab snippet generates an input file
 
  \begin{adjustwidth}{-1cm}{-1cm}
  \inputminted[]{matlab}{code/dlmwrite.m}
@@ -326,8 +325,8 @@ which will create the following file, called \texttt{NPSS\_setpoint.input}
  \end{adjustwidth} 
 
 
-This method works best when adhering to a few hueristics. Firstly, organize an engine repository
-into subfolders. Although it's possible to contain everything within a single file, separating code
+This method works best when adhering to a few heuristics. Firstly, organize an engine repository
+into subfolders. Although it's possible to contain everything within a single file or root folder, separating code
 improves readability and simplifies automated file operations when they can be limited to a smaller subset of files.
 Table \ref{tab:Scaffolding} shows one such way to organize files.
 
@@ -358,7 +357,7 @@ Breaking down folders, files, and functions into smaller pieces also improves co
 which is generally desired for any codebase.
 This allows many general use functions to act as a common core shared between multiple engine architectures.
 
-Separating logic in this manner allows the programmer to better follow the third recommended hueristic
+Separating logic in this manner allows the programmer to better follow the third recommended heuristic
 of passing the minimum amount of information necessary between codes. If inputs are isolated in their own file
 it's much easer for external codes to pass in files containing only the necessary data, 
 while keeping any logic (and therefore potential side-effects) separated.
@@ -374,19 +373,21 @@ by passing files between programs after every single time step.
 However, due to it's inefficiency it is highly advisable to revert to
 memory-wrapped execution when driving a transient from Matlab.
 
-\section{Compiled S-function (Memory-wrapped simulations)}
+\subsection{Compiled S-function (Memory-wrapped simulations)}
 
 A dynamically-linked library (\textt{dll}) is included with NPSS
 and can be used within a level 2 S-function in Simulink.
-The \textt{NPSSSfunction.dll} requires a full NPSS release distribution,
+The \textt{NPSSSfunction.dll} requires a full NPSS v1.6.X release distribution,
 as well a 32-bit(only) Matlab distribution from R2007b through R2010a.
 Future versions of Matlab disable the operability of \textt{dll}'s,
 in favor of strictly enforcing the use of custom Matlab Executable \textt{MEX} files.
 The \texttt{dll} is not compatible with the Mac operating system, or any 64-bit version
-of Matlab.
+of Matlab. As of April 2014, NPSS version 2.6.X has been recompiled from source as a \texttt{MEX} file.
+This version of the S-function is only compatible with 64-bit Windows, and has been tested up to Matlab 2012b,
+and is not backwards compatible to NPSS version 1.X.X
 
-The S-function encapsulates NPSS within a simulink block and can be integrated into a time-varying
-system using the same conventions as conventional simulink component blocks.
+The S-function encapsulates NPSS within a Simulink block and can be integrated into a time-varying
+system using the same conventions as conventional Simulink component blocks.
 Any standard output \texttt{stdout} from NPSS is redirected to the Matlab command window during execution. 
 It's recommended to print any user-relevant error and dialog messages to \texttt{stdout}
 or pipe them to a log file to aid in debugging.
@@ -402,7 +403,7 @@ to a user-defined configuration file enclosed in single quotes (`').
 \label{f:DialogBox}
 \end{figure}
 
-Where the configuration bash file includes all necessary paths, global envinronment variables, and specifies
+Where the configuration bash file includes all necessary paths, global environment variables, and specifies
 which engine variables to expose to Simulink. This file defines the engine application program interface (API).
 
  \begin{adjustwidth}{-1cm}{-1cm}
@@ -412,29 +413,29 @@ which engine variables to expose to Simulink. This file defines the engine appli
 This particular example includes multiple folders on the path for the NPSS distribution itself,
 as well as paths within the engine folder.
 The final command line string runs a batch run file and two optional preprocessor flags called \texttt{DFlag1}
-and \texttt{DFlag2}. If not explicity added to the config file, the \texttt{engine.run} file must also set
+and \texttt{DFlag2}. If not explicitly added to the config file, the \texttt{engine.run} file must also set
 the \texttt{NPSS\_TOP}, \texttt{NPSS\_DEV\_TOP}, \texttt{NPSS\_CONFIG}, and \texttt{NPSS\_TOP} environmental variables.
 
 In this example, the config file will create an S-function block with 1 input port,
 and 2 output ports each containing 5 muxed signals.
 Signals fed into this input port will continuously update the value of the NPSS defined \texttt{Burner.Wfuel}
-variable during the transient exectution. Similarly, all the specified outputs will be fed as output
+variable during the transient execution. Similarly, all the specified outputs will be fed as output
 signals of the Simulink block.
-Multiple variables defined within a single ouptut port are muxed into a single signal bus.
+Multiple variables defined within a single output port are muxed into a single signal bus.
 
 
-In-depth examples of the S-functionc an be found in the source code for the
+In-depth examples of the S-function can be found in the source code for the
 Tool for Turbine Engine Closed-loop Transient Analysis program (TTECTrA). \cite{TTECTrA}
 The S-function was used extensively for this project under
 NASA's Advanced Air Transportation Technologies (AATT) Project.
 
-\section{Source-to-Source Translation}
+\subsection{Source-to-Source Translation}
 
 The most abstract method of generating a transient model from NPSS is best described as ``Source-to-Source Translation"
 (SST), which is the process of converting one high level model to another. This pattern is appropriate when developing
 a transient engine model that may be completely separate, but originally derived, from NPSS.
 
-Other thermodynamic cycle analysis tools such as TMATS \cite{TMATS}, and PyCycle \cite{PyCycle}
+Other thermodynamic cycle analysis tools such as TMATS \cite{TMATS} \cite{TMATS-NPSS}, and PyCycle
 contain the same basic engine components as NPSS.
 Assuming an engine model is comprised of thermodynamic components that exist in multiple tools,
 it's possible to automatically convert an engine from one code to another.
@@ -446,7 +447,7 @@ Rather than forcing all developers to use the same codebase,
 this method allows engines to be modeled in each environment's native language.
 Following the ``write once, run everywhere'' paradigm,
 this process can significantly reduce development time,
-which is vital for maintaining code flexbility and adaptability across languages.
+which is vital for maintaining code flexibility and adaptability across languages.
 
 This methodology is demonstrated with the Supersonic Component Engine Model (SCEM), which is a dynamic engine model
 developed to better understand the coupling between propulsion and  aero-servo-elastic modes of long slender
@@ -455,7 +456,7 @@ The model is designed to extend a steady-state NPSS model
 and better capture high bandwidth dynamics associated with large component volumes. 
 When the porting was first attempted by hand, 
 development proved to be challenging largely due to the number of engine components involved.
-Many of the challenges were associated with human-errors from manaully replicating the model in a new language. 
+Many of the challenges were associated with human-errors from manually replicating the model in a new language. 
 
 Although the SCEM solver is fundamentally different than the solver used by NPSS,
 both models were comprised of the same thermodynamic elements, linked together in the same order. 
@@ -511,15 +512,15 @@ The varying merits, complexities, and pitfalls of each approach indicate that th
 no silver-bullet approach to unifying these disparate development tools.
 The best method is dependent on the problem,
 and even a hybrid combination of multiple methods can be implemented.
-As an example, a highly complex NPSS model could be partially transcompiled into a native matlab model,
-with any custom components encapuslated within an isolated S-function,
-with basic initializiation data passed using basic file I/O.
+As an example, a highly complex NPSS model could be partially transcompiled into a native Matlab model,
+with any custom components encapsulated within an isolated S-function,
+with basic initialization data passed using basic file I/O.
 Beyond developing the API, it is also up to the developers of each tool to
 agree upon the level of control each program is responsible for.
 Often times tools have overlapping capabilities, so the developers must take extra care to
-avoid conflicting or competing logic between each toolset.
+avoid conflicting or competing logic between each tool-set.
 
-Developing standard modeling and message passing approaches are necesary to unify
+Developing standard modeling and message passing approaches are necessary to unify
 codebases and reducing development time ultimately leads to better overall designs.
 
 

@@ -22,5 +22,5 @@ solver.presolverSequence("fuelCalc"); //backwards compatible alias
 void fuelCalc(){ //this is run before every time step
 	real Wf1 = 0.1;
 	real Wf2 = 2.9;
-	real RampOutput = Ramp( time, 0.2, 3.0, Wf1, Wf2 );
+	real RampOutput = Ramp( time, 0.2, 3.0, Wf1, Wf2 ); // eq_rhs
 }
