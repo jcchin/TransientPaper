@@ -97,6 +97,8 @@ $2^{nd}$ Order Gear & Implicit & $ \left.N_{t2}= N_{t1} + \middle(\dfrac{1}{3}\d
 \end{tabular} 
 \end{minipage}
 
+\vspace{5mm} %5mm vertical space
+
 Steady-state iteration may be required for any of these methods, and the choice between explicit
 and implicit types comes down to accuracy vs time. Explicit methods assume the integrand is
 constant over the specified time interval, therefore integration is only performed once per time
@@ -156,8 +158,12 @@ the acceleration derived from the net engine torque.
 
 \subsection{Transient Dependents and Constraints}
 
-Time-varying inputs, dependents, and constraints must be defined and evaluated at every time step during a simulation, and therefore cannot simply be
-assigned to a constant value before executing the \texttt{run()} command. Time dependent variables can be calculated explicitly with
+Transient calculations aren't limited to integrated engine state variables;
+in fact, any variable can be configured to change as a function of time.
+Time-varying inputs, dependents, and constraints must be defined and evaluated at every time
+step during a simulation, and therefore cannot simply be
+assigned a constant value before executing the \texttt{run()} command as they are in steady-state simulations.
+Time dependent variables can be calculated explicitly with
 piecewise functions for every time step or scheduled using built-in table and interpolation routines.
 The code snippets below show both of these methods respectively, for defining fuel flow as shown in figure \ref{f:ramp}.
 
@@ -435,11 +441,11 @@ The most abstract method of generating a transient model from NPSS is best descr
 (SST), which is the process of converting one high level model to another. This pattern is appropriate when developing
 a transient engine model that may be completely separate, but originally derived, from NPSS.
 
-Other thermodynamic cycle analysis tools such as TMATS \cite{TMATS} \cite{TMATS-NPSS}, and PyCycle
+Alternate thermodynamic cycle analysis tools to NPSS such as TMATS \cite{TMATS} \cite{TMATS-NPSS}, and PyCycle
 contain the same basic engine components as NPSS.
-Assuming an engine model is comprised of thermodynamic components that exist in multiple tools,
+Therefore, assuming an engine model is comprised entirely of thermodynamic components that exist in both tools,
 it's possible to automatically convert an engine from one code to another.
-A source-to-source compiler capable of parsing NPSS model code could automatically
+A source-to-source compiler capable of parsing a NPSS model code could automatically
 instantiate an equivalent version in an alternate analysis tool.
 
 SST could significantly reduce development time and tedious error-prone manual model translation.
@@ -450,7 +456,7 @@ this process can significantly reduce development time,
 which is vital for maintaining code flexibility and adaptability across languages.
 
 This methodology is demonstrated with the Supersonic Component Engine Model (SCEM), which is a dynamic engine model
-developed to better understand the coupling between propulsion and  aero-servo-elastic modes of long slender
+developed to better understand the coupling between propulsion and aero-servo-elastic modes of long slender
 supersonic vehicles. \cite{Volume Dynamic} \cite{Turbofan}
 The model is designed to extend a steady-state NPSS model
 and better capture high bandwidth dynamics associated with large component volumes. 
@@ -465,14 +471,18 @@ Many of the challenges were associated with human-errors from manually replicati
 \label{f:legacySCEM}
 \end{figure}
 
-Although the SCEM solver is fundamentally different than the solver used by NPSS,
-both models were comprised of the same thermodynamic elements, linked together in the same order. 
+Similar to NPSS, a library of generic SCEM engine elements was composed to handle many combinations and
+engine architectures. Although the SCEM solver is fundamentally different than the solver used by NPSS,
+both models were comprised of the same basic thermodynamic elements, linked together in the same order. 
 In order to automate the generation of an analogous NPSS model,
-both tools must follow the same object-oriented nature. \cite{MatlabOOP}
+both tools followed the same object-oriented nature, rather than the procedural paradigm generally used in Matlab. 
+These custom Matlab classes use object-oriented features that first became
+available in the R2008a revision of Matlab\cite{MatlabOOP}
 By aligning the framework paradigms between NPSS and SCEM,
-it became possible to create a parallel Matlab “objects” for each standard element contained within NPSS.
-These Matlab objects contain all of the data book-keeping,
-calculations and Simulink structures necessary to build many of the common elements within NPSS.
+it became possible to create a parallel Matlab ``classes'' for each standard element contained within NPSS.
+
+These Matlab objects parse common attributes within NPSS components,
+dynamically configuring the analogous Simulink block to match.
 This automates the conversion of any NPSS model into an analogous Matlab model,
 greatly reducing the opportunity for human error and simplifying the process of extending the model.
 
@@ -486,43 +496,16 @@ greatly reducing the opportunity for human error and simplifying the process of 
 
 \end{figure}
 
-The object-oriented nature will hopefully make this easy
-by providing well-defined interfaces between the various component objects for developers, while
-hiding the unnecessary implementation details from the user. The modularity of each element will
-allow the program to be updated incrementally, and conversely, large program-wide changes can be
-implemented simultaneously for all elements of the same type. 
-
-Since NPSS engine models can vary widely in implementation details a SST is limited to recognizing
+Since NPSS engine models can vary widely in implementation details, a SST is limited to recognizing
 standard elements, solver variables, and connections.
-A NPSS developer could also include special attributes within standard components that would be
-ignored by NPSS, but parsed by the SST transcompiler to provide additional context.
+A NPSS developer can also include special attributes within standard components that would be
+ignored by NPSS, but parsed by the SST transcompiler to provide additional context to the
+Matlab equivalent engine.
 
 \begin{adjustwidth}{-0.5cm}{-0.5cm}
  \inputminted[]{c++}{code/parser}
  \end{adjustwidth} 
 
-
-\subsubsection{Component Library}
-
-Similar to NPSS, a library of generic engine elements was composed to handle many combinations and
-engine architectures. These custom Matlab classes use object-oriented features that first became
-available in the R2008a revision of Matlab (The MathWorks Inc, R2013a), a language that primarily
-supports a more procedural programming paradigm. An object is a specific instance of a class,
-which follows the basic blueprint of the class, but with its own internal properties. Each
-component class is complimented by a generic Simulink subsystem model. When an object is
-instantiated and loaded, the component subsystem is added to the overall Simulink model. Each
-class “book-keeps” data pertinent to that component type, and controls the behavior of the loaded
-Simulink model. These classes help to keep the otherwise unwieldy amount of incoming data
-organized, and allow the engine to be constructed automatically based on an equivalent NPSS
-engine. Using a relatively small number of instructions (automatically generated by the NPSS
-output described above) an entire Simulink engine can be constructed from various component
-instances, be fully connected to each other, with every subsystem appropriately populated.
-
-	The inherent modularity of the component library allows new classes to be added or modified
-without affecting the rest of the library, while simultaneously allowing modifications to be made
-across every instance of a particular class without duplicated effort. A system-wide bug affecting
-every duct element in an engine could be addressed in a single piece of code, while still offering
-the ability to tailor individual instances of ducts with various configurations and attributes.
 
 \section{Final Remarks}
 
