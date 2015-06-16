@@ -1,0 +1,10 @@
+Element Shaft HP_Shaft  {
+	
+	ShaftInputPort HPC, HPT; //list connected turbomachinery
+	HPX = 100.0; //Horsepower extracted from the shaft
+	Nmech = 10000; //mechanical speed
+	inertia = 2; //shaft inertia  **required for transient**
+
+	real Matlab_position = 7; //ignored by NPSS,
+			//but potentially meaningful to a SST parser
+}
