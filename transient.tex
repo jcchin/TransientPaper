@@ -354,7 +354,7 @@ which will create the following file, called \texttt{NPSS\_setpoint.input}
 
 
 This method works best when adhering to a few heuristics. Firstly, organize an engine repository
-into subfolders. Although it's possible to contain everything within a single file or root folder, separating code
+into sub-folders. Although it's possible to contain everything within a single file or root folder, separating code
 improves readability and simplifies automated file operations when they can be limited to a smaller subset of files.
 Table \ref{tab:Scaffolding} shows one such way to organize files.
 
@@ -382,7 +382,7 @@ Src & All other model and function source files \\
 \end{table}
 
 Breaking down folders, files, and functions into smaller pieces also improves code-reuse,
-which is generally desired for any codebase.
+which is generally desired for any code-base.
 This allows many general use functions to act as a common core shared between multiple engine architectures.
 
 Separating logic in this manner allows the programmer to better follow the third recommended heuristic
@@ -439,9 +439,9 @@ Matlab Version & NPSS v1.6.X & NPSS v2.7.X 32-bit & NPSS v2.7.X 64-bit\\
 
 The \texttt{MEX} version requires a few extra steps as outlined in the user`s
 guide provided in each NPSS distribution.\cite{Sfunc}
-This involves invoking matlab from the command line,
+This involves invoking Matlab from the command line,
 and adding the NPSS distribution bin file to both the computer
-\texttt{PATH} and matlab path.
+\texttt{PATH} and Matlab path.
 
 The S-function encapsulates NPSS within a Simulink block and can be integrated into a time-varying
 system using the same conventions as conventional Simulink component blocks.
@@ -513,7 +513,7 @@ A source-to-source compiler capable of parsing a NPSS model code could automatic
 instantiate an equivalent version in an alternate analysis tool.
 
 SST could significantly reduce development time and tedious error-prone manual model translation.
-Rather than forcing all developers to use the same codebase,
+Rather than forcing all developers to use the same code-base,
 this method allows engines to be modeled in each environment's native language.
 Following the ``write once, run everywhere'' paradigm,
 this process can significantly reduce development time,
