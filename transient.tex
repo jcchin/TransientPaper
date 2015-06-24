@@ -66,12 +66,23 @@ designer's discretion.
 
 This paper assumes a basic understanding of the concepts required for steady-state engine modeling within NPSS.
 Foundational concepts are best introduced in the NPSS user's guide \cite{NPSS} and other introductory resources.
-\cite{JonesIntro} 
-Transient simulations represent the time-varying behavior of a system by finding a series of
-solutions at discrete time steps over a desired time interval. NPSS solves these systems of
-equations largely in the same way it handles steady-state solutions. However for transient
-systems, some of the equations require engine state integration rather than simply driving imbalances to zero.
-
+\cite{JonesIntro}
+Transient simulations represent the time-varying behavior of a system by finding
+a series of solutions at discrete time steps over a desired time interval.
+At a high level, the NPSS solver drives models to a converged state
+by simultaneously solving a system of equations comprised of thermodynamic and
+user-defined constraints. For most gas-turbine engine problems,
+the model cannot be solved by explicitly marching from the front to the back of
+the engine cycle. Instead of sequentially solving for each engine component,
+an initial guess at the entire model solution is iteratively (implicitly) refined
+until all constraints are satisfied. 
+For transient problems, NPSS solves these systems of
+equations largely in the same way it handles steady-state solutions.
+However for transient systems, certain engine states have ``memory''
+and are driven to a time-dependent integrated state,
+rather than simply driving all imbalances to zero (steady-state).
+This extra integration step and additional user-defined equations are
+outlined in the following sections.
 
 \subsection{Solver and Integration Methods}
 NPSS supports multiple integration types that are outlined in the NPSS users guide.
@@ -150,10 +161,14 @@ for a shaft component:
  \inputminted[]{c++}{code/shaft.mdl}
  \end{adjustwidth} 
 
-In steady-state mode, the solver will vary the shaft's mechanical speed to
+In steady-state mode the solver will vary the shaft's mechanical speed to
 balance the input turbine torques with the output compressor port torques.
-In transient mode, the shaft speed is varied until the speed
-controlled by the solver is equal to the speed calculated by integrating
+In transient mode there is no guarantee that compressor torques match the
+turbine torque. In fact, this time-dependent imbalance is the defining driver
+for most engine cycle transients.
+To model the effects of changing engine ``momentum'',
+the solver guesses are varied until the shaft speed 
+is equal to the speed calculated by integrating
 the acceleration derived from the net engine torque.
 
 \subsection{Transient Dependents and Constraints}
@@ -280,23 +295,30 @@ Finally, a new transient run clears the previously integrated engine states and 
 
 \subsection{Advanced Dynamics Modeling}
 
-Users can find additional transient solver options in the NPSS user's guide \cite[chap.~18]{NPSS} for simulating
-more advanced engine dynamics such as custom first order-lags, adaptive time-stepping, custom integrators or
-predictor calculations.
+Users can find additional transient solver options in the NPSS user's guide
+\cite[chap.~18]{NPSS} for simulating
+more advanced engine dynamics such as custom first order-lags,
+adaptive time-stepping, custom integrators or predictor calculations.
 
-While possible to implement in NPSS, many advanced modeling processes are can benefit
+While possible to implement in NPSS, many advanced modeling processes can benefit
 from specialized tool-sets in other development environments such as Matlab/Simulink.
-The following sections outline strategies for interfacing NPSS with Matlab to take advantage of Matlab's large
-ecosystem of tools.
+The following sections outline strategies for interfacing NPSS
+with Matlab to take advantage of Matlab's large ecosystem of tools.
 
 \section{Passing Data Between NPSS and Matlab}
+
+There are several different ways to pass information between simulations
+running in NPSS and Matlab/Simulink. There is no silver bullet approach,
+each solution fits a different use case.
+
 \subsection{Raw File I/O}
 
 The most simplistic and straightforward method for passing information is automated
-file passing and batched system calls.
-
-File I/O is undesirable from a performance aspect, but can be acceptable if the total number of round-trips between
-NPSS and Matlab are minimized. This method is suitable for upfront engine initialization calculations, 
+input/output (I/O) file passing and batched system calls.
+File I/O is undesirable from a performance aspect,
+but can be acceptable if the total number of round-trips between
+NPSS and Matlab are minimized.
+This method is suitable for upfront engine initialization calculations, 
 and functions where programming simplicity is more important than computational efficiency.
 
 A single round-trip generally involves the following steps:
@@ -382,15 +404,44 @@ memory-wrapped execution when driving a transient from Matlab.
 \subsection{Compiled S-function (Memory-wrapped simulations)}
 
 A dynamically-linked library (\textt{dll}) is included with NPSS
-and can be used within a level 2 S-function in Simulink.
+and can be used within a level 2 S-function in Simulink. 
 The \textt{NPSSSfunction.dll} requires a full NPSS v1.6.X release distribution,
 as well a 32-bit(only) Matlab distribution from R2007b through R2010a.
 Future versions of Matlab disable the operability of \textt{dll}'s,
 in favor of strictly enforcing the use of custom Matlab Executable \textt{MEX} files.
 The \texttt{dll} is not compatible with the Mac operating system, or any 64-bit version
-of Matlab. As of April 2014, NPSS version 2.6.X has been recompiled from source as a \texttt{MEX} file.
-This version of the S-function is only compatible with 64-bit Windows, and has been tested up to Matlab 2012b,
-and is not backwards compatible to NPSS version 1.X.X
+of Matlab. As of April 2014, NPSS version 2.7.1 VC10
+has been recompiled from source as a \texttt{MEX} file.
+This version of the S-function is only compatible between programs supporting
+the same resolution.
+So the 64-bit \texttt{MEX} is only compatible with with 64-bit NPSS,
+and has only been tested on Matlab 2012b, and Matlab 2014b.
+A separately compiled \texttt{MEX} file is required for 32-bit Matlab and NPSS distributions.
+These new wrappers are not backwards compatible to NPSS version 1.6.X
+The version compatibility is shown in table \ref{tab:Sfunc_Versions}.
+
+\begin{table}[H]
+\centering
+\begin{adjustwidth}{-1.5cm}{-1.5cm}
+\begin{tabular}{|c|c|c|c|c|}
+\hline 
+Matlab Version & NPSS v1.6.X & NPSS v2.7.X 32-bit & NPSS v2.7.X 64-bit\\ 
+\hline \hline
+32-bit & DLL (R2007b-R2010a) & MEXw32 (R2010a-R2014b) & Not Supported \\ 
+\hline 
+64-bit & Not Supported & Not Supported & MEXw64 (R2012b-R2014b) \\ 
+\hline 
+\end{tabular} 
+\end{adjustwidth}
+\caption{S-function compatibility chart}
+\label{tab:Sfunc_Versions}
+\end{table}
+
+The \texttt{MEX} version requires a few extra steps as outlined in the user`s
+guide provided in each NPSS distribution.\cite{Sfunc}
+This involves invoking matlab from the command line,
+and adding the NPSS distribution bin file to both the computer
+\texttt{PATH} and matlab path.
 
 The S-function encapsulates NPSS within a Simulink block and can be integrated into a time-varying
 system using the same conventions as conventional Simulink component blocks.
@@ -429,11 +480,24 @@ variable during the transient execution. Similarly, all the specified outputs wi
 signals of the Simulink block.
 Multiple variables defined within a single output port are muxed into a single signal bus.
 
-
 In-depth examples of the S-function can be found in the source code for the
 Tool for Turbine Engine Closed-loop Transient Analysis program (TTECTrA). \cite{TTECTrA}
 The S-function was used extensively for this project under
 NASA's Advanced Air Transportation Technologies (AATT) Project.
+The tool is intended to automatically calculate a first-cut approximation of
+a closed loop controller for any given transient engine model.
+The program runs multiple internally wrapped NPSS transient scenarios
+with fuel flow dictated by the Simulink model and uses the returned output to
+select appropriate controller parameters. Fig \ref{f:TransientTrace} shows
+the NPSS engine response to a fuel ramp controlled by the outer Simulink program.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{images/transientTrace}
+\caption{NPSS transient engine response to a Simulink commanded fuel flow}
+\label{f:TransientTrace}
+\end{figure}
+
 
 \subsection{Source-to-Source Translation}
 
@@ -517,17 +581,21 @@ The varying merits, complexities, and pitfalls of each approach indicate that th
 no silver-bullet approach to unifying these disparate development tools.
 The best method is dependent on the problem,
 and even a hybrid combination of multiple methods can be implemented.
-As an example, a highly complex NPSS model could be partially transcompiled into a native Matlab model,
-with any custom components encapsulated within an isolated S-function,
-with basic initialization data passed using basic file I/O.
+As an example, a highly complex NPSS model could be partially
+transcompiled into a native Matlab model,
+with any custom components encapsulated within their own isolated S-functions.
+This same hypothetical model could also perform a one-time initialization
+involving data passed using basic file I/O.
 Beyond developing the API, it is also up to the developers of each tool to
 agree upon the level of control each program is responsible for.
-Often times tools have overlapping capabilities, so the developers must take extra care to
+Often times tools have overlapping capabilities,
+so the developers must take extra care to
 avoid conflicting or competing logic between each tool-set.
 
-Developing standard modeling and message passing practices and approaches are necessary to unify
-code-bases and development efforts.
-Investing the time to reduce development time can ultimately lead to better overall designs.
+Developing standard modeling and message passing practices and approaches
+are necessary to unify code-bases and development efforts.
+Investing upfront effort to reduce long-term development time and complexity
+can ultimately lead to better overall designs.
 
 
 \end{document}
