@@ -3,64 +3,23 @@
 
 % \tableofcontents
 
-\section{Introduction and Motivation}
-Historically, there have been completely separate code-bases for design space exploration and
-transient engine analysis. The capability to create flexible ``low fidelity'' models is ideal in
-the earliest  conceptual design stages, where large design spaces can be explored relatively
-quickly. As the engine design starts to become more concrete, higher fidelity models are
-developed. These higher detail models are intrinsically more sensitive to design tweaks, and in
-general take longer to setup. They inherently require more stringently defined configurations
-and boundary conditions. A large variation in the baseline design could
-potentially render entire higher fidelity analyses obsolete. Due to this weakness in adaptability,
-higher fidelity models are generally not created until the low-fidelity design has fully matured.
-This friction can partly be attributed to the differences in tool-sets when transitioning to higher
-fidelity models. 
+\section{Introduction}
 
-	From a life-cycle perspective, there comes a point when the prospect of re-design becomes
-prohibitively expensive and initial design decisions become cemented into the design. Any insights
-gained from more detailed analyses are constrained to these initial design choices. Naturally, a
-trade-off exists on the amount of time spent in each analysis phase. Spending more time in the low
-fidelity phase could have large payoffs in the long run; however, without higher fidelity models
-it is hard to identify possible shortcomings such as those arising from operability and control
-issues.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=1.0\textwidth]{images/optimum_product_vs_time}
-\caption{Overarching Applied Research Challenge: Uncertainty in Optimum Product vs. Time \& Cost to Produce}
-\label{f:product_vs_time}
-\end{figure}
-
-Figure \ref{f:product_vs_time} shows a pedagogical representation of the general relation between
-accuracy and analysis set-up time, with the origin representing the perfect analysis capability.
-Lower fidelity (Lo-Fi) models are less accurate, but can be set
-up and modified relatively quickly. The darker gray path characterizes the traditional design
-trend. Higher fidelity (Hi-Fi) models take longer to build, and therefore, aren't started until
-the low fidelity design reaches quiescence. If designers attempt to introduce Hi-Fi models earlier in
-the design, as shown by the light gray line shifted to the left, they quickly become outdated as
-the baseline model continues to undergo changes. Inevitably the models must be re-written to match
-the new Lo-Fi design and the path reverts to the dark gray route. The only way to incorporate the
-intermediate fidelity model earlier into the design process, is by absorbing the Int-Fi codes into
-the low fidelity codes as portrayed by the red line. Combining both disciplines into a unified code
-would accomplish this, but each tool-set can remain distinct as long as the Int-Fi model is
-adaptable enough to keep up with the rapid changes of the Low-Fi code.
-Creating a single unified program to satisfy every design need runs an equally high risk
-of becoming overly complex or cumbersome. 
-A natural reaction is for various
-disciplines to diverge and create unique tools satisfying their particular needs using frameworks
-and programming languages that are already of familiarity. As mentioned earlier, this is
-acceptable as long as the codes preserve flexibility and rapid adaptability. An intermediate
-fidelity code can only be introduced earlier into the low fidelity analysis phase if it can keep
-pace with the rapid redesigns.
-
-The subsequent sections explore various design patterns to rapidly develop transient models. Each
-approach starts with a base model built with NPSS, and assumes the reader already has a basic
-understanding of how to construct a steady-state model. This paper focuses on further enhancements
-required to interface NPSS with Matlab codes. The first method being the simplest and most
-straightforward but performance constrained, and the last being the most abstract. These methods
-aren't mutually exclusive and the specific implementation details could vary greatly based on the
-designer's discretion. 
-
+Transient analysis is not a new feature of the Numerical Propulsion System Simulation
+(NPSS), but transient considerations are becoming more pertinent 
+as multidisciplinary trade-offs begin to play a larger role in advanced engine designs.
+This paper serves to supplement the relatively sparse documentation on transient modeling
+and cover the budding convergence between NPSS and Matlab based modeling toolsets.
+The following sections explore various design patterns to rapidly develop transient models.
+Each approach starts with a base model built with NPSS, and assumes the reader already has a basic
+understanding of how to construct a steady-state model. The second half of the paper
+focuses on further enhancements required to subsequently interface NPSS with Matlab codes.
+The first method being the simplest and most straightforward but performance constrained,
+and the last being the most abstract.
+These methods aren't mutually exclusive and the specific implementation
+details could vary greatly based on the designer's discretion.
+Basic recommendations are provided to organize model logic in a format that most
+easily amenable to integration with existing Matlab control toolsets.
 
 \section{Running NPSS Transiently}
 
@@ -81,8 +40,19 @@ equations largely in the same way it handles steady-state solutions.
 However for transient systems, certain engine states have ``memory''
 and are driven to a time-dependent integrated state,
 rather than simply driving all imbalances to zero (steady-state).
-This extra integration step and additional user-defined equations are
-outlined in the following sections.
+This extra integration step and additional user-defined steps are outlined in the following sections.
+At the highest level, a transient model minimally requires the following
+considerations beyond steady-state modeling design:
+
+\begin{enumerate}
+\item Configuring transient solver parameters: solutionMode, time boundary, time step, tolerances, termination criteria
+\item Defining time-varying input/output variables using functions or interpolation tables,
+which are are subsequently connected to the solver via independents, dependents, and constraints
+\item Defining transient engine components and initial conditions for transient-specific properties
+\item Configuring output viewers
+\end{enumerate}
+
+These steps are outlined with example code below.
 
 \subsection{Solver and Integration Methods}
 NPSS supports multiple integration types that are outlined in the NPSS users guide.
@@ -115,7 +85,9 @@ and implicit types comes down to accuracy vs time. Explicit methods assume the i
 constant over the specified time interval, therefore integration is only performed once per time
 step. Implicit methods perform a sub-iteration (independent from time) until the predicted state
 value agrees with the corrected value within a specified tolerance. NPSS also allows the user to
-define custom integration methods using the \texttt{Integrator} class. \cite[chap.~15.2]{NPSS}  
+define custom integration methods using the \texttt{Integrator} class. \cite[chap.~15.2]{NPSS}
+The following code shows how a model can be initialized for either an
+implicit or explicit transient run in NPSS.
 
 \begin{adjustwidth}{-0.5cm}{-0.5cm}
  \begin{minted}{c++}
@@ -136,7 +108,8 @@ solver properties including the simulation start, step and stop parameters. \cit
 which must be supplied by the user. Over the course of a run, the \texttt{TransientExecutive} may
 update these attributes or even overwrite values set by the user. The user can also preemptively
 stop a simulation using the  \texttt{quiescence()} and  \texttt{terminateCondition()} functions
-available in the \texttt{TransientExecutive}.
+available in the \texttt{TransientExecutive}. The code below demonstrates how
+to set time step settings.
 
 \begin{adjustwidth}{0cm}{0cm}
  \begin{minted}{c++}
@@ -162,13 +135,20 @@ for a shaft component:
  \end{adjustwidth} 
 
 In steady-state mode the solver will vary the shaft's mechanical speed to
-balance the input turbine torques with the output compressor port torques.
+balance the input turbine torques ($\tau_{turb}$)
+with the output compressor port torques ($\tau_{comp}$).
+In this situation, steady state refers to:
+
+\begin{equation}
+\tau_{comp} - \tau_{turb} = F_{net} = ma = 0
+\end{equation}
+
 In transient mode there is no guarantee that compressor torques match the
-turbine torque. In fact, this time-dependent imbalance is the defining driver
-for most engine cycle transients.
+turbine torque. In fact, this time-dependent imbalance is often
+the defining transient being modeled.
 To model the effects of changing engine ``momentum'',
-the solver guesses are varied until the shaft speed 
-is equal to the speed calculated by integrating
+the solver guesses are varied until the shaft speeds 
+match the speed calculated by integrating
 the acceleration derived from the net engine torque.
 
 \subsection{Transient Dependents and Constraints}
@@ -200,7 +180,10 @@ Or the same function could be built using a table.
  \end{adjustwidth} 
 
 The last line of each of these example functions tells NPSS how to evaluate the calculated fuel flow input.
-These dynamic variables can evaluated by creating a set of independent/dependent equations as show below.
+These dynamic variables can evaluated by creating a set of independent/dependent equations
+that are either defined in-line as shown above, or grouped together as show below.
+The name \texttt{trans\_Condition} has no special meaning to the framework,
+it's an arbitrary name chosen for this example.
 The transient variable function is set as the right hand side (\texttt{rhs}) of a dependent equation,
 with the left hand side (\texttt{lhs}) set to fuel flow. 
 A second variable must be defined as the independent variable and is varied by the solver until the dependent
@@ -267,19 +250,11 @@ Additional viewer reference material can be found in \cite[chap.~7.2.2, ~12, ~15
 
 \subsection{Transient Run Files}
 
-In summary, a transient model generally requires the minimum following steps:
-
-\begin{enumerate}
-\item Defining transient engine components and initial conditions for transient-specific properties
-\item Defining time-varying input/output variables using functions or interpolation tables,
-which are are subsequently connected to the solver via independents, dependents, and constraints
-\item Configuring transient solver parameters: solutionMode, time boundary, time step, tolerances, termination criteria
-\item Configuring output viewers
-\end{enumerate}
-
-It's generally recommended to organize each of these steps in separate files or folders to better manage complexity.
+It's generally recommended to organize each of these steps in separate files
+or folders to better manage complexity.
 Each aspect is then generally orchestrated in a run file containing numerous simulations chained together. 
-After on-design steady-state engine sizing occurs, engine state boundaries can be established by running multiple
+After on-design steady-state engine sizing occurs,
+engine state boundaries can be established by running multiple
 off-design power settings until key engine constraints become active.
 Generating large tables of equilibrated or `trimmed' engine points
 throughout the flight envelopes ensures that transients can be run from any starting condition without
@@ -460,8 +435,10 @@ to a user-defined configuration file enclosed in single quotes (`').
 \label{f:DialogBox}
 \end{figure}
 
-Where the configuration bash file includes all necessary paths, global environment variables, and specifies
-which engine variables to expose to Simulink. This file defines the engine application program interface (API).
+This configuration bash file includes all necessary paths, global environment variables,
+and specifies which engine variables to expose to Simulink.
+In essence, this file defines the which engine variables can be controlled
+at the boundary of the NPSS S-function black box.
 
  \begin{adjustwidth}{-1cm}{-1cm}
  \inputminted[]{bash}{code/engineConfig.bat}
@@ -501,13 +478,16 @@ the NPSS engine response to a fuel ramp controlled by the outer Simulink program
 
 \subsection{Source-to-Source Translation}
 
-The most abstract method of generating a transient model from NPSS is best described as ``Source-to-Source Translation"
-(SST), which is the process of converting one high level model to another. This pattern is appropriate when developing
+The most abstract method of generating a transient model from NPSS
+is best described as ``Source-to-Source Translation"
+(SST), which is the process of converting one high level model to another.
+This pattern is appropriate when developing
 a transient engine model that may be completely separate, but originally derived, from NPSS.
 
-Alternate thermodynamic cycle analysis tools to NPSS such as TMATS \cite{TMATS} \cite{TMATS-NPSS}, and PyCycle
-contain the same basic engine components as NPSS.
-Therefore, assuming an engine model is comprised entirely of thermodynamic components that exist in both tools,
+Alternate thermodynamic cycle analysis tools to NPSS such as TMATS \cite{TMATS} \cite{TMATS-NPSS},
+and PyCycle \cite{Pycycle} contain the same basic engine components as NPSS.
+Therefore, assuming an engine model is comprised entirely of
+thermodynamic components that exist in both tools,
 it's possible to automatically convert an engine from one code to another.
 A source-to-source compiler capable of parsing a NPSS model code could automatically
 instantiate an equivalent version in an alternate analysis tool.
@@ -519,7 +499,8 @@ Following the ``write once, run everywhere'' paradigm,
 this process can significantly reduce development time,
 which is vital for maintaining code flexibility and adaptability across languages.
 
-This methodology is demonstrated with the Supersonic Component Engine Model (SCEM), which is a dynamic engine model
+This methodology is demonstrated with the Supersonic Component Engine Model (SCEM),
+which is a dynamic engine model
 developed to better understand the coupling between propulsion and aero-servo-elastic modes of long slender
 supersonic vehicles. \cite{Volume Dynamic} \cite{Turbofan}
 The model is designed to extend a steady-state NPSS model
@@ -564,7 +545,8 @@ Since NPSS engine models can vary widely in implementation details, a SST is lim
 standard elements, solver variables, and connections.
 A NPSS developer can also include special attributes within standard components that would be
 ignored by NPSS, but parsed by the SST transcompiler to provide additional context to the
-Matlab equivalent engine.
+Matlab equivalent engine. The following example code shows a \texttt{Matlab\_position} variable
+that could be ignored by NPSS, but parsed by a Matlab counterpart.
 
 \begin{adjustwidth}{-0.5cm}{-0.5cm}
  \inputminted[]{c++}{code/parser}

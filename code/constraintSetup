@@ -12,7 +12,8 @@ Dependent ThrustTarget{
 //------------------------------------
 // Transient Solver Setup
 //------------------------------------
-solver.addIndependent( "Burner.Wfuel" );
-solver.addDependent( "ThrustTarget" );
 //add additional constraint(Name,Min/Max,Priority,Slope);
 ThrustTarget.addConstraint("Tt4_Max_Limit","MAX",1,1);
+//after adding any constraints, add the equation pair to the solver
+solver.addIndependent( "Burner.Wfuel" );
+solver.addDependent( "ThrustTarget" );

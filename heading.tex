@@ -4,7 +4,7 @@
 %  $Id: sample.tex,v 1.18 2009/08/10 17:22:22 wawood Exp $
 
 %  next 2 lines pull in the NASA.cls file, put options between []
-\documentclass[]             % options: RDPonly, coveronly, nocover
+\documentclass[nocover]             % options: RDPonly, coveronly, nocover
 {NASA}                       %   plus standard article class options
 
 
@@ -24,8 +24,8 @@
 \Type{TM}                    % TM, TP, CR, CP, SP, TT
 \SubjectCategory{##}         % two digit number
 \LNumber{#####}              % Langley L-number
-\Number{####}              % Report number
-\Month{04}                   % two digit number
+\Number{23596}              % Report number
+\Month{09}                   % two digit number
 \Year{2015}                  % four digit number
 \SubjectTerms{NPSS, Matlab, Transient, Control, Dynamics}     % 4-5 comma separated words
 \Pages{15}                   % all the pages from the front to back covers
@@ -37,14 +37,17 @@
 \TaskNumber{}                % Task 123
 \WorkUnitNumber{}            % 123-45-67-89
 \SupplementaryNotes{}
-\Acknowledgment{This paper is based on the collaboration between NASA Glenn's Propulsion Systems Analysis Branch, Intelligent Control and Autonomy Branch, and Georgia Institute of Technology's Aerospace Department.}
+\Acknowledgment{This paper is based on the collaboration between NASA Glenn's Propulsion Systems Analysis Branch, Intelligent Control and Autonomy Branch, and Georgia Institute of Technology's Aerospace Systems Design Laboratory.}
 
-\abstract{ This document outlines methodologies designed to improve the interface between the Numerical Propulsion
-System Simulation (NPSS) Framework and various control and dynamic analyses developed in the Matlab and Simulink
-environment. Although NPSS is most commonly used for steady-state modeling, this paper is intended to supplement the
-relatively sparse documentation on it's transient analysis functionality. Matlab has become an extremely popular
-engineering environment, and better methodologies are necessary to develop tools that leverage the benefits of these
-disparate frameworks.}   % suggested 200 words
+\abstract{ This document outlines methodologies designed to improve the
+interface between the Numerical Propulsion System Simulation framework
+and various control and dynamic analyses developed in the Matlab and Simulink
+environment. Although NPSS is most commonly used for steady-state modeling,
+this paper is intended to supplement the relatively sparse
+documentation on it's transient analysis functionality.
+Matlab has become an extremely popular engineering environment,
+and better methodologies are necessary to develop tools that
+leverage the benefits of these disparate frameworks.}   % suggested 200 words
 
 \usepackage{minted} %syntax highlighting
 \usepackage{color} %syntax highlighting

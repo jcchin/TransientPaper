@@ -10,4 +10,4 @@ real Ramp( real time, real tstart, real duration, real Y1, real Y2 ) {
   else { fuel = Y2; }
   return fuel; 
 }
-RunCondition.eq_rhs = "Ramp( time, 0.2, 3.0, Wf1, Wf2 )";
+trans_Condition.eq_rhs = "Ramp( time, 0.2, 3.0, Wf1, Wf2 )";
